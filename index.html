@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Mini Mart</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- html2pdf.js CDN for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* Custom styles for the Inter font and general body styling */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Light blue-gray background */
+        }
+        /* Hide scrollbar for a cleaner look */
+        body::-webkit-scrollbar {
+            display: none;
+        }
+        body {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none;    /* Firefox */
+        }
+        /* Styles for PDF printout specific adjustments, if needed */
+        .pdf-content {
+            padding: 20px;
+            font-family: 'Inter', sans-serif;
+            font-size: 10pt;
+            color: #333;
+        }
+        .pdf-content h1, .pdf-content h2, .pdf-content h3 {
+            color: #1a202c;
+        }
+        .pdf-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        .pdf-content th, .pdf-content td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .pdf-content th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header Section -->
+    <header class="header_main">
+        <div class="container mx-auto flex flex-col sm:flex-row items-center justify-between">
+            <h1 class="text-3xl font-extrabold tracking-tight mb-2 sm:mb-0">🛒 Computer Store</h1>
+            <nav>
+                <ul class="flex space-x-4">
+                    <li><a href="#" class="nav-link hover:text-blue-200 transition duration-300" data-page="products">Category</a></li>
+                    <li><a href="#" class="nav-link hover:text-blue-200 transition duration-300" data-page="stock">Inventory Management</a></li>
+                    <li><a href="#" class="nav-link hover:text-blue-200 transition duration-300" data-page="history">Report Daily</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="container mx-auto px-4 py-8 flex-grow flex flex-col lg:flex-row gap-8">
+
+        <!-- Product Display Section (Initially Visible) -->
+        <section id="products-page" class="page-section flex-1 bg-white p-6 rounded-xl shadow-md">
+            <div class="flex justify-between items-center mb-6 border-b-2 pb-2">
+                <h2 class="text-2xl font-bold text-gray-800">Our Products</h2>
+                <button id="restock-button" class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-full transition duration-300 transform hover:scale-105 active:scale-95 text-sm">
+                    Restock All
+                </button>
+            </div>
+            <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <!-- Products will be dynamically loaded here by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Stock Management Section -->
+        <section id="stock-page" class="page-section flex-1 bg-white p-6 rounded-xl shadow-md hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b-2 pb-2">Stock Management</h2>
+            <div id="stock-list" class="space-y-4">
+                <!-- Stock items will be dynamically loaded here by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Sales History & Reports Section -->
+        <section id="history-page" class="page-section flex-1 bg-white p-6 rounded-xl shadow-md hidden">
+            <div class="flex justify-between items-center mb-6 border-b-2 pb-2">
+                <h2 class="text-2xl font-bold text-gray-800">Sales History & Daily Report</h2>
+                <button id="print-report-button" class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-full transition duration-300 transform hover:scale-105 active:scale-95 text-sm">
+                    Print Report (PDF)
+                </button>
+            </div>
+
+            <div class="mb-8">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">Daily Sales Report (<span id="report-date"></span>)</h3>
+                <div id="daily-report-summary" class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <p class="text-gray-700">Total Sales Today: <span id="daily-total-sales" class="font-bold text-blue-700">$0.00</span></p>
+                    <p class="text-gray-700">Items Sold Today: <span id="daily-total-items" class="font-bold text-blue-700">0</span></p>
+                    <p class="text-gray-700">Number of Transactions Today: <span id="daily-total-transactions" class="font-bold text-blue-700">0</span></p>
+                </div>
+            </div>
+
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">All Sales History</h3>
+            <div id="sales-history-list" class="space-y-4">
+                <p id="empty-history-message" class="text-gray-500 text-center">No sales recorded yet.</p>
+                <!-- Sales history items will be dynamically loaded here by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Shopping Cart Section (Always Visible) -->
+        <aside class="w-full lg:w-1/3 bg-white p-6 rounded-xl shadow-md sticky top-8 h-fit">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b-2 pb-2">🛒 Shopping Cart</h2>
+            <div id="cart-items" class="space-y-4 mb-6">
+                <!-- Cart items will be dynamically loaded here by JavaScript -->
+                <p id="empty-cart-message" class="text-gray-500 text-center">Your cart is empty.</p>
+            </div>
+            <div class="border-t-2 pt-4 flex justify-between items-center">
+                <span class="text-xl font-semibold text-gray-700">Total:</span>
+                <span id="cart-total" class="text-2xl font-bold text-blue-600">$0.00</span>
+            </div>
+            <button id="checkout-button" class="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transform transition duration-300 hover:scale-105 active:scale-95">
+                Proceed to Checkout
+            </button>
+        </aside>
+
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="bg-gray-800 text-white p-4 mt-8 rounded-t-lg">
+        <div class="container mx-auto text-center text-sm">
+            &copy; 2025 My Computer Store. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Customer Info Modal -->
+    <div id="customer-info-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-lg p-6 shadow-xl max-w-md w-full">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Customer Information</h3>
+            <div class="mb-4">
+                <label for="customer-type" class="block text-gray-700 text-sm font-bold mb-2">Customer Type:</label>
+                <select id="customer-type" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    <option value="Normal">Normal Customer</option>
+                    <option value="Standard">Standard Customer</option>
+                    <option value="VIP">VIP Customer</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label for="customer-name" class="block text-gray-700 text-sm font-bold mb-2">Customer Name (Optional):</label>
+                <input type="text" id="customer-name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
+            <div class="mb-6">
+                <label for="customer-phone" class="block text-gray-700 text-sm font-bold mb-2">Customer Phone Number (Optional):</label>
+                <input type="tel" id="customer-phone" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            </div>
+            <div class="flex justify-end">
+                <button id="submit-customer-info" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                    Complete Purchase
+                </button>
+                <button id="cancel-customer-info" class="ml-4 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-300">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Message Box for alerts -->
+    <div id="message-box" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-lg p-6 shadow-xl max-w-sm w-full text-center">
+            <p id="message-content" class="text-lg font-medium text-gray-800 mb-4"></p>
+            <button id="message-close-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                OK
+            </button>
+        </div>
+    </div>
+
+    <!-- Invoice Modal -->
+    <div id="invoice-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-lg p-6 shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">Invoice</h3>
+            <div id="invoice-content">
+                <!-- Invoice details will be populated here -->
+            </div>
+            <div class="flex justify-end mt-6">
+                <button id="close-invoice-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Storage (in-memory for this example)
+        let products = [
+            { id: 1, name: 'MSI', price: 749, stock: 10, image: 'https://asset.msi.com/resize/image/global/product/product_1737602995c95879e6463325254f810682a141b82d.png62405b38c58fe0f07fcef2367d8a9ba1/400' },
+            { id: 2, name: 'ASUS_TUF', price: 3.49, stock: 8, image: 'https://dlcdnwebimgs.asus.com/files/media/1635a8a8-fdd1-4db9-a4b0-75f86c9c5873/v1/img/audio/tuf-f16.png' },
+            { id: 3, name: 'ROG_STRIX_G16', price: 1299, stock: 5, image: 'https://dlcdnwebimgs.asus.com/gain/E20134EE-F6B3-4AB7-A1B5-73795E91011D/w300' },
+            { id: 4, name: 'ROG_SCAR', price: 1699, stock: 12, image: 'https://dlcdnwebimgs.asus.com/files/media/AE815CAE-C3DB-431B-975B-603E59127735/v1/images/large/1x/1__kv_laptop_2.png' },
+            { id: 5, name: 'MAC BOOK PRO ', price: 1399, stock: 20, image: 'https://www.yaphone.com/5965/apple-macbook-air-13-m2-qwerty.jpg' },
+            { id: 6, name: 'Lenovo LOQ', price: 1099, stock: 15, image: 'https://s3.ap-southeast-1.amazonaws.com/uploads-store/uploads/all/O4ajHGBI0bt0Sg8fRSyGpj0I8ZtvjkDBbZ3yM6te.png' },
+            { id: 7, name: 'hp Dell', price: 499, stock: 18, image: 'https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/notebooks/latitude-notebooks/latitude-15-5550-laptop/mg/notebook-latitude-15-5550-rgb-silver-gallery-1.psd?fmt=png-alpha&pscan=auto&scl=1&hei=804&wid=1303&qlt=100,1&resMode=sharp2&size=1303,804&chrss=full' },
+            { id: 8, name: 'Linux', price: 2099, stock: 7, image: 'https://static0.xdaimages.com/wordpress/wp-content/uploads/2023/03/dell-xps-15-2023.png' },
+        ];
+        // Store initial product stock for restock functionality
+        const initialProductStock = products.map(p => ({ id: p.id, stock: p.stock }));
+
+        let cart = [];
+        let salesHistory = []; // Stores completed sales transactions
+
+        // Get DOM elements
+        const pageSections = document.querySelectorAll('.page-section');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const productListDiv = document.getElementById('product-list');
+        const stockListDiv = document.getElementById('stock-list');
+        const cartItemsDiv = document.getElementById('cart-items');
+        const cartTotalSpan = document.getElementById('cart-total');
+        const emptyCartMessage = document.getElementById('empty-cart-message');
+        const checkoutButton = document.getElementById('checkout-button');
+        const messageBox = document.getElementById('message-box');
+        const messageContent = document.getElementById('message-content');
+        const messageCloseButton = document.getElementById('message-close-button');
+        const restockButton = document.getElementById('restock-button');
+        const salesHistoryList = document.getElementById('sales-history-list');
+        const emptyHistoryMessage = document.getElementById('empty-history-message');
+        const printReportButton = document.getElementById('print-report-button');
+
+        const customerInfoModal = document.getElementById('customer-info-modal');
+        const customerTypeSelect = document.getElementById('customer-type');
+        const customerNameInput = document.getElementById('customer-name');
+        const customerPhoneInput = document.getElementById('customer-phone'); // Changed from email
+        const submitCustomerInfoButton = document.getElementById('submit-customer-info');
+        const cancelCustomerInfoButton = document.getElementById('cancel-customer-info');
+
+        const invoiceModal = document.getElementById('invoice-modal');
+        const invoiceContent = document.getElementById('invoice-content');
+        const closeInvoiceButton = document.getElementById('close-invoice-button');
+
+        const dailyTotalSalesSpan = document.getElementById('daily-total-sales');
+        const dailyTotalItemsSpan = document.getElementById('daily-total-items');
+        const dailyTotalTransactionsSpan = document.getElementById('daily-total-transactions');
+        const reportDateSpan = document.getElementById('report-date');
+
+        /**
+         * Utility function to format currency.
+         * @param {number} amount - The amount to format.
+         * @returns {string} Formatted currency string.
+         */
+        function formatCurrency(amount) {
+            return `$${amount.toFixed(2)}`;
+        }
+
+        /**
+         * Displays a custom message box to the user.
+         * @param {string} message - The message to display.
+         */
+        function showMessageBox(message) {
+            messageContent.textContent = message;
+            messageBox.classList.remove('hidden');
+        }
+
+        // Event listener for the message box close button
+        messageCloseButton.addEventListener('click', () => {
+            messageBox.classList.add('hidden');
+        });
+
+        // Event listener for customer info modal close buttons
+        cancelCustomerInfoButton.addEventListener('click', () => {
+            customerInfoModal.classList.add('hidden');
+            customerNameInput.value = ''; // Clear fields
+            customerPhoneInput.value = '';
+            customerTypeSelect.value = 'Normal'; // Reset to default
+        });
+
+        // Event listener for invoice modal close button
+        closeInvoiceButton.addEventListener('click', () => {
+            invoiceModal.classList.add('hidden');
+        });
+
+        /**
+         * Switches between different application pages/sections.
+         * @param {string} pageName - The ID of the section to display (e.g., 'products', 'stock', 'history').
+         */
+        function showPage(pageName) {
+            pageSections.forEach(section => {
+                section.classList.add('hidden');
+            });
+            document.getElementById(`${pageName}-page`).classList.remove('hidden');
+
+            // Re-render content based on the page
+            if (pageName === 'products') {
+                renderProducts();
+            } else if (pageName === 'stock') {
+                renderStockManagement();
+            } else if (pageName === 'history') {
+                renderSalesHistoryAndReport();
+            }
+        }
+
+        // Add event listeners for navigation links
+        navLinks.forEach(link => {
+            link.addEventListener('click', (event) => {
+                event.preventDefault();
+                const page = event.target.dataset.page;
+                showPage(page);
+            });
+        });
+
+        /**
+         * Renders all products in the product list section.
+         * Updates stock display and disables "Add to Cart" if out of stock.
+         */
+        function renderProducts() {
+            productListDiv.innerHTML = ''; // Clear existing products
+            products.forEach(product => {
+                const isOutOfStock = product.stock <= 0;
+                const buttonClasses = isOutOfStock
+                    ? 'bg-red-400 cursor-not-allowed'
+                    : 'bg-blue-500 hover:bg-blue-600 transition duration-300 transform hover:scale-105 active:scale-95';
+
+                const productCard = document.createElement('div');
+                productCard.className = `bg-gray-50 p-4 rounded-lg shadow-sm flex flex-col items-center border border-gray-200 ${isOutOfStock ? 'opacity-70' : 'hover:shadow-md hover:border-blue-300'}`;
+                productCard.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}" class="w-32 h-32 object-contain rounded-md mb-3 border border-gray-300 bg-white p-1">
+                    <h3 class="text-lg font-semibold text-gray-800 text-center mb-1">${product.name}</h3>
+                    <p class="text-blue-600 font-bold text-xl mb-1">${formatCurrency(product.price)}</p>
+                    <p class="text-sm text-gray-500 mb-3">Stock: <span class="font-bold ${isOutOfStock ? 'text-red-500' : 'text-green-600'}">${product.stock}</span></p>
+                    <button class="add-to-cart-btn text-white font-medium py-2 px-4 rounded-full w-full ${buttonClasses}" data-product-id="${product.id}" ${isOutOfStock ? 'disabled' : ''}>
+                        ${isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+                    </button>
+                `;
+                productListDiv.appendChild(productCard);
+            });
+
+            // Add event listeners to "Add to Cart" buttons
+            document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const productId = parseInt(event.target.dataset.productId);
+                    addItemToCart(productId);
+                });
+            });
+        }
+
+        /**
+         * Renders the stock management section.
+         * Allows updating stock levels for each product.
+         */
+        function renderStockManagement() {
+            stockListDiv.innerHTML = '';
+            if (products.length === 0) {
+                stockListDiv.innerHTML = '<p class="text-gray-500 text-center">No products to manage stock for.</p>';
+                return;
+            }
+
+            products.forEach(product => {
+                const stockItemDiv = document.createElement('div');
+                stockItemDiv.className = 'flex flex-col sm:flex-row items-center justify-between bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200';
+                stockItemDiv.innerHTML = `
+                    <div class="flex items-center mb-2 sm:mb-0">
+                        <img src="${product.image}" alt="${product.name}" class="w-16 h-16 object-contain rounded-md mr-4 border border-gray-300 bg-white p-1">
+                        <span class="font-medium text-gray-800 text-lg">${product.name}</span>
+                    </div>
+                    <div class="flex items-center mt-2 sm:mt-0">
+                        <span class="text-gray-600 mr-2">Current Stock: <span class="font-bold text-blue-600">${product.stock}</span></span>
+                        <input type="number" min="0" value="${product.stock}" class="w-24 px-2 py-1 border rounded-md text-center stock-input" data-product-id="${product.id}">
+                        <button class="update-stock-btn bg-purple-600 hover:bg-purple-700 text-white font-medium py-1 px-3 rounded-md ml-2 transition duration-300 transform hover:scale-105 active:scale-95" data-product-id="${product.id}">
+                            Update
+                        </button>
+                    </div>
+                `;
+                stockListDiv.appendChild(stockItemDiv);
+            });
+
+            // Add event listeners for update stock buttons
+            document.querySelectorAll('.update-stock-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const productId = parseInt(event.target.dataset.productId);
+                    const stockInput = document.querySelector(`.stock-input[data-product-id="${productId}"]`);
+                    const newStock = parseInt(stockInput.value);
+
+                    if (!isNaN(newStock) && newStock >= 0) {
+                        const productToUpdate = products.find(p => p.id === productId);
+                        if (productToUpdate) {
+                            productToUpdate.stock = newStock;
+                            renderStockManagement(); // Re-render to show updated stock
+                            renderProducts(); // Update product view as well
+                            showMessageBox(`${productToUpdate.name} stock updated to ${newStock}.`);
+                        }
+                    } else {
+                        showMessageBox("Please enter a valid stock number.");
+                    }
+                });
+            });
+        }
+
+
+        /**
+         * Renders the sales history and daily report section.
+         */
+        function renderSalesHistoryAndReport() {
+            salesHistoryList.innerHTML = ''; // Clear existing history
+            emptyHistoryMessage.classList.add('hidden');
+
+            const today = new Date();
+            const todayString = today.toLocaleDateString();
+            reportDateSpan.textContent = todayString;
+
+            let dailyTotalSales = 0;
+            let dailyTotalItems = 0;
+            let dailyTotalTransactions = 0;
+
+            if (salesHistory.length === 0) {
+                emptyHistoryMessage.classList.remove('hidden');
+            } else {
+                // Sort history by date, newest first
+                const sortedHistory = [...salesHistory].sort((a, b) => b.timestamp - a.timestamp);
+
+                sortedHistory.forEach((sale, index) => {
+                    const saleDate = new Date(sale.timestamp);
+                    const formattedDate = saleDate.toLocaleString(); // e.g., "M/D/YYYY, H:MM:SS AM/PM"
+
+                    // Check for daily report
+                    if (saleDate.toLocaleDateString() === todayString) {
+                        dailyTotalSales += sale.total;
+                        dailyTotalItems += sale.items.reduce((sum, item) => sum + item.quantity, 0);
+                        dailyTotalTransactions++;
+                    }
+
+                    const saleDiv = document.createElement('div');
+                    saleDiv.className = 'bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200';
+                    saleDiv.innerHTML = `
+                        <h4 class="font-bold text-lg text-gray-800 mb-2">Sale #${salesHistory.length - index} on ${formattedDate}</h4>
+                        <p class="text-gray-700">Customer Type: <span class="font-semibold">${sale.customer.type || 'N/A'}</span></p>
+                        <p class="text-gray-700">Customer: ${sale.customer.name || 'N/A'} (${sale.customer.phone || 'N/A'})</p>
+                        <p class="text-gray-700 mb-2">Total: <span class="font-bold text-blue-600">${formatCurrency(sale.total)}</span></p>
+                        <div class="ml-4 text-sm text-gray-600">
+                            <p class="font-semibold">Items Purchased:</p>
+                            <ul class="list-disc pl-5">
+                                ${sale.items.map(item => `
+                                    <li>${item.name} (x${item.quantity}) - ${formatCurrency(item.price * item.quantity)}</li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    `;
+                    salesHistoryList.appendChild(saleDiv);
+                });
+            }
+
+            dailyTotalSalesSpan.textContent = formatCurrency(dailyTotalSales);
+            dailyTotalItemsSpan.textContent = dailyTotalItems;
+            dailyTotalTransactionsSpan.textContent = dailyTotalTransactions;
+        }
+
+        /**
+         * Adds an item to the shopping cart or increments its quantity.
+         * Checks for sufficient stock before adding.
+         * @param {number} productId - The ID of the product to add.
+         */
+        function addItemToCart(productId) {
+            const productToAdd = products.find(p => p.id === productId);
+            if (productToAdd) {
+                const existingItem = cart.find(item => item.id === productId);
+
+                // Check stock before adding
+                if (productToAdd.stock <= 0) {
+                    showMessageBox(`Sorry, ${productToAdd.name} is out of stock!`);
+                    return; // Do not add to cart
+                }
+                if (existingItem && existingItem.quantity >= productToAdd.stock) {
+                    showMessageBox(`You already have all available ${productToAdd.name} in your cart.`);
+                    return; // Do not add more if all stock is in cart
+                }
+
+                if (existingItem) {
+                    existingItem.quantity++;
+                } else {
+                    cart.push({ ...productToAdd, quantity: 1 });
+                }
+                updateCartDisplay();
+            }
+        }
+
+        /**
+         * Removes an item from the shopping cart or decrements its quantity.
+         * If quantity becomes 0, the item is removed from the cart.
+         * @param {number} productId - The ID of the product to remove.
+         */
+        function removeItemFromCart(productId) {
+            const itemIndex = cart.findIndex(item => item.id === productId);
+            if (itemIndex > -1) {
+                if (cart[itemIndex].quantity > 1) {
+                    cart[itemIndex].quantity--;
+                } else {
+                    cart.splice(itemIndex, 1); // Remove item if quantity is 1
+                }
+                updateCartDisplay();
+            }
+        }
+
+        /**
+         * Updates the display of items in the shopping cart and recalculates the total.
+         */
+        function updateCartDisplay() {
+            cartItemsDiv.innerHTML = ''; // Clear current cart display
+            let total = 0;
+
+            if (cart.length === 0) {
+                emptyCartMessage.classList.remove('hidden');
+                checkoutButton.disabled = true; // Disable checkout if cart is empty
+                checkoutButton.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                emptyCartMessage.classList.add('hidden');
+                checkoutButton.disabled = false; // Enable checkout if cart has items
+                checkoutButton.classList.remove('opacity-50', 'cursor-not-allowed');
+
+                cart.forEach(item => {
+                    const itemTotal = item.price * item.quantity;
+                    total += itemTotal;
+
+                    const cartItemDiv = document.createElement('div');
+                    cartItemDiv.className = 'flex items-center justify-between bg-gray-50 p-3 rounded-lg shadow-sm border border-gray-200';
+                    cartItemDiv.innerHTML = `
+                        <div class="flex items-center">
+                            <span class="font-medium text-gray-800 mr-2">${item.name}</span>
+                            <span class="text-sm text-gray-600">(x${item.quantity})</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="font-bold text-blue-500 mr-3">${formatCurrency(itemTotal)}</span>
+                            <button class="remove-from-cart-btn text-red-500 hover:text-red-700 transition duration-300" data-product-id="${item.id}">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                    `;
+                    cartItemsDiv.appendChild(cartItemDiv);
+                });
+            }
+
+            cartTotalSpan.textContent = formatCurrency(total);
+
+            // Add event listeners to "Remove from Cart" buttons
+            document.querySelectorAll('.remove-from-cart-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const productId = parseInt(event.target.dataset.productId || event.target.closest('button').dataset.productId);
+                    removeItemFromCart(productId);
+                });
+            });
+        }
+
+        /**
+         * Initiates the checkout process by showing the customer information modal.
+         */
+        function initiateCheckout() {
+            if (cart.length > 0) {
+                customerInfoModal.classList.remove('hidden');
+                customerNameInput.focus(); // Focus on the first input field
+            } else {
+                showMessageBox("Your cart is empty. Please add items before checking out.");
+            }
+        }
+
+        /**
+         * Completes the purchase after customer information is entered.
+         * Decrements stock for purchased items, saves transaction, and generates invoice.
+         */
+        submitCustomerInfoButton.addEventListener('click', () => {
+            const customerName = customerNameInput.value.trim();
+            const customerPhone = customerPhoneInput.value.trim(); // Changed from email
+            const customerType = customerTypeSelect.value; // Get selected customer type
+            const transactionTimestamp = Date.now();
+            const transactionTotal = parseFloat(cartTotalSpan.textContent.replace('$', ''));
+
+            // Store transaction
+            const transaction = {
+                id: salesHistory.length + 1, // Simple ID generation
+                timestamp: transactionTimestamp,
+                customer: {
+                    name: customerName || 'Anonymous',
+                    phone: customerPhone || 'N/A', // Changed from email
+                    type: customerType // Added customer type
+                },
+                items: JSON.parse(JSON.stringify(cart)), // Deep copy of cart items
+                total: transactionTotal
+            };
+            salesHistory.push(transaction);
+
+            // Decrement stock for each item in the cart
+            cart.forEach(cartItem => {
+                const productInStock = products.find(p => p.id === cartItem.id);
+                if (productInStock) {
+                    productInStock.stock -= cartItem.quantity;
+                }
+            });
+
+            // Clear customer info fields and hide modal
+            customerNameInput.value = '';
+            customerPhoneInput.value = '';
+            customerTypeSelect.value = 'Normal'; // Reset to default
+            customerInfoModal.classList.add('hidden');
+
+            showMessageBox(`Purchase successful! Your total is ${formatCurrency(transactionTotal)}. Thank you!`);
+
+            renderInvoice(transaction); // Display the invoice
+            cart = []; // Clear the cart after checkout
+            updateCartDisplay(); // Update cart display and total
+            renderProducts(); // Re-render products to show updated stock levels
+            renderSalesHistoryAndReport(); // Update history and report
+        });
+
+
+        /**
+         * Renders the invoice details in a modal.
+         * @param {object} transaction - The transaction object to display.
+         */
+        function renderInvoice(transaction) {
+            let invoiceHtml = `
+                <div class="text-center mb-6">
+                    <p class="text-xl font-bold text-gray-800">My Mini Mart</p>
+                    <p class="text-sm text-gray-600">Your one-stop shop for essentials!</p>
+                    <p class="text-sm text-gray-600">Date: ${new Date(transaction.timestamp).toLocaleString()}</p>
+                    <p class="text-sm text-gray-600">Invoice ID: #${transaction.id}</p>
+                </div>
+                <div class="mb-6">
+                    <p class="font-semibold text-gray-700">Customer Details:</p>
+                    <p class="text-gray-600 ml-4">Type: ${transaction.customer.type}</p>
+                    <p class="text-gray-600 ml-4">Name: ${transaction.customer.name}</p>
+                    <p class="text-gray-600 ml-4">Phone: ${transaction.customer.phone}</p>
+                </div>
+                <div class="mb-6">
+                    <p class="font-semibold text-gray-700">Items Purchased:</p>
+                    <table class="min-w-full bg-white border border-gray-300 rounded-md overflow-hidden mt-2">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="py-2 px-4 border-b text-left text-gray-700">Product</th>
+                                <th class="py-2 px-4 border-b text-center text-gray-700">Qty</th>
+                                <th class="py-2 px-4 border-b text-right text-gray-700">Price</th>
+                                <th class="py-2 px-4 border-b text-right text-gray-700">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${transaction.items.map(item => `
+                                <tr>
+                                    <td class="py-2 px-4 border-b text-gray-800">${item.name}</td>
+                                    <td class="py-2 px-4 border-b text-center text-gray-800">${item.quantity}</td>
+                                    <td class="py-2 px-4 border-b text-right text-gray-800">${formatCurrency(item.price)}</td>
+                                    <td class="py-2 px-4 border-b text-right text-gray-800">${formatCurrency(item.price * item.quantity)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-right border-t-2 pt-4">
+                    <p class="text-xl font-bold text-gray-800">Grand Total: <span class="text-blue-600">${formatCurrency(transaction.total)}</span></p>
+                </div>
+            `;
+            invoiceContent.innerHTML = invoiceHtml;
+            invoiceModal.classList.remove('hidden');
+        }
+
+        /**
+         * Restocks all products to their initial quantities.
+         */
+        function restockAllProducts() {
+            products.forEach(product => {
+                const initialStock = initialProductStock.find(p => p.id === product.id);
+                if (initialStock) {
+                    product.stock = initialStock.stock;
+                }
+            });
+            renderProducts(); // Re-render products to show updated stock levels
+            if (document.getElementById('stock-page').classList.contains('hidden')) {
+                // If on stock page, re-render it too
+            } else {
+                renderStockManagement();
+            }
+            showMessageBox("All products have been restocked!");
+        }
+
+        /**
+         * Generates and downloads a PDF of the sales report.
+         */
+        function printSalesReport() {
+            const element = document.getElementById('history-page'); // Target the entire sales history page
+
+            // Create a temporary clone of the element to adjust styles for PDF generation
+            const clonedElement = element.cloneNode(true);
+            clonedElement.classList.remove('hidden'); // Ensure it's visible for rendering
+            clonedElement.style.width = '210mm'; // A4 width for consistency
+            clonedElement.style.padding = '20mm'; // Add some padding
+
+            // Optional: Remove buttons or interactive elements from the cloned content if desired
+            clonedElement.querySelectorAll('button').forEach(btn => btn.remove());
+            clonedElement.querySelectorAll('nav').forEach(nav => nav.remove());
+            clonedElement.querySelector('aside').remove(); // Remove the shopping cart from the PDF
+
+            // Apply a class for PDF-specific styling
+            clonedElement.classList.add('pdf-content');
+
+            // Append to body temporarily for html2pdf to render
+            document.body.appendChild(clonedElement);
+
+            html2pdf(clonedElement, {
+                margin: 10,
+                filename: `Sales_Report_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).finally(() => {
+                // Remove the cloned element after PDF generation
+                document.body.removeChild(clonedElement);
+            });
+        }
+
+
+        // Event listener for the main checkout button
+        checkoutButton.addEventListener('click', initiateCheckout);
+
+        // Event listener for the restock button
+        restockButton.addEventListener('click', restockAllProducts);
+
+        // Event listener for the print report button
+        printReportButton.addEventListener('click', printSalesReport);
+
+
+        // Initial rendering when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            showPage('products'); // Start on the products page
+            updateCartDisplay(); // Ensure initial cart state is correct
+        });
+    </script>
+</body>
+</html>
