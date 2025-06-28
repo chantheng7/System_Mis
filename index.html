@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comprehensive Mini Mart</title>
+    <title>Comprehensive Computer Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
@@ -121,7 +121,7 @@
                     <div id="daily-report-summary" class="bg-blue-50 p-4 rounded-lg border border-blue-200">
                         <p class="text-gray-700">Total Sales Today: <span id="daily-total-sales" class="font-bold text-blue-700">$0.00</span></p>
                         <p class="text-gray-700">Items Sold Today: <span id="daily-total-items" class="font-bold text-blue-700">0</span></p>
-                        <p class="text-gray-700">Number of Transactions Today: <span id="daily-total-transactions" class="font-bold text-blue-700">0</span></p>
+                        <p class="text-gray-700">Number of Transactions Today: <span class="font-bold text-blue-700">0</span></p>
                     </div>
                 </div>
 
@@ -154,6 +154,39 @@
         </div>
     </footer>
 
+    <div id="product-options-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-lg p-6 shadow-xl max-w-md w-full">
+            <h3 id="modal-product-name" class="text-2xl font-bold text-gray-800 mb-4 text-center"></h3>
+            <img id="modal-product-image" src="" alt="" class="w-40 h-40 object-contain mx-auto mb-4 border rounded-md">
+
+            <div class="mb-4">
+                <label for="select-storage" class="block text-gray-700 text-sm font-bold mb-2">Storage:</label>
+                <select id="select-storage" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></select>
+            </div>
+            <div class="mb-4">
+                <label for="select-color" class="block text-gray-700 text-sm font-bold mb-2">Color:</label>
+                <select id="select-color" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></select>
+            </div>
+            <div class="mb-6">
+                <label for="select-cpu" class="block text-gray-700 text-sm font-bold mb-2">CPU Type:</label>
+                <select id="select-cpu" class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></select>
+            </div>
+
+            <p class="text-xl font-bold text-gray-800 mb-4 text-center">Price: <span id="modal-product-price" class="text-blue-600">$0.00</span></p>
+            <p class="text-md text-gray-600 mb-6 text-center">Current Stock: <span id="modal-product-stock" class="font-bold">0</span></p>
+
+            <div class="flex justify-end gap-4">
+                <button id="add-variant-to-cart-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                    Add to Cart
+                </button>
+                <button id="cancel-product-options" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-300">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+
     <div id="customer-info-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
         <div class="bg-white rounded-lg p-6 shadow-xl max-w-md w-full">
             <h3 class="text-xl font-bold text-gray-800 mb-4">Customer Information</h3>
@@ -173,6 +206,21 @@
                 <label for="customer-phone" class="block text-gray-700 text-sm font-bold mb-2">Customer Phone Number (Optional):</label>
                 <input type="tel" id="customer-phone" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
             </div>
+
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Payment Method:</label>
+                <div class="flex items-center space-x-4">
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="payment-method" value="Cash" class="form-radio text-blue-600" checked>
+                        <span class="ml-2 text-gray-700">Cash</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="payment-method" value="Bank Transfer" class="form-radio text-blue-600">
+                        <span class="ml-2 text-gray-700">Bank Transfer</span>
+                    </label>
+                </div>
+            </div>
+
             <div class="flex justify-end">
                 <button id="submit-customer-info" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
                     Complete Purchase
@@ -209,19 +257,88 @@
     <script>
         // Data Storage (in-memory for this example)
         let products = [
-            { id: 1, name: 'MSI', price: 749, stock: 10, image: 'https://asset.msi.com/resize/image/global/product/product_1737602995c95879e6463325254f810682a141b82d.png62405b38c58fe0f07fcef2367d8a9ba1/400' },
-            { id: 2, name: 'ASUS_TUF', price: 3.49, stock: 8, image: 'https://dlcdnwebimgs.asus.com/files/media/1635a8a8-fdd1-4db9-a4b0-75f86c9c5873/v1/img/audio/tuf-f16.png' },
-            { id: 3, name: 'ROG_STRIX_G16', price: 1299, stock: 5, image: 'https://dlcdnwebimgs.asus.com/gain/E20134EE-F6B3-4AB7-A1B5-73795E91011D/w300' },
-            { id: 4, name: 'ROG_SCAR', price: 1699, stock: 12, image: 'https://dlcdnwebimgs.asus.com/files/media/AE815CAE-C3DB-431B-975B-603E59127735/v1/images/large/1x/1__kv_laptop_2.png' },
-            { id: 5, name: 'MAC BOOK PRO ', price: 1399, stock: 20, image: 'https://www.yaphone.com/5965/apple-macbook-air-13-m2-qwerty.jpg' },
-            { id: 6, name: 'Lenovo LOQ', price: 1099, stock: 15, image: 'https://s3.ap-southeast-1.amazonaws.com/uploads-store/uploads/all/O4ajHGBI0bt0Sg8fRSyGpj0I8ZtvjkDBbZ3yM6te.png' },
-            { id: 7, name: 'hp Dell', price: 499, stock: 18, image: 'https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/notebooks/latitude-notebooks/latitude-15-5550-laptop/mg/notebook-latitude-15-5550-rgb-silver-gallery-1.psd?fmt=png-alpha&pscan=auto&scl=1&hei=804&wid=1303&qlt=100,1&resMode=sharp2&size=1303,804&chrss=full' },
-            { id: 8, name: 'Linux', price: 2099, stock: 7, image: 'https://static0.xdaimages.com/wordpress/wp-content/uploads/2023/03/dell-xps-15-2023.png' },
+            {
+                id: 1,
+                name: 'MSI Stealth',
+                baseImage: 'https://asset.msi.com/resize/image/global/product/product_1737602995c95879e6463325254f810682a141b82d.png62405b38c58fe0f07fcef2367d8a9ba1/400',
+                variants: [
+                    { variantId: '1-A', storage: '256GB', color: 'Black', cpu: 'Intel Core i5', price: 749, stock: 5 },
+                    { variantId: '1-B', storage: '512GB', color: 'Black', cpu: 'Intel Core i5', price: 849, stock: 3 },
+                    { variantId: '1-C', storage: '1TB', color: 'White', cpu: 'Intel Core i7', price: 999, stock: 2 },
+                    { variantId: '1-D', storage: '2TB', color: 'Silver', cpu: 'Intel Core i9', price: 1199, stock: 1 }
+                ]
+            },
+            {
+                id: 2,
+                name: 'ASUS TUF Gaming',
+                baseImage: 'https://dlcdnwebimgs.asus.com/files/media/1635a8a8-fdd1-4db9-a4b0-75f86c9c5873/v1/img/audio/tuf-f16.png',
+                variants: [
+                    { variantId: '2-A', storage: '512GB', color: 'Black', cpu: 'AMD Ryzen 5', price: 900, stock: 8 },
+                    { variantId: '2-B', storage: '1TB', color: 'Black', cpu: 'AMD Ryzen 7', price: 1100, stock: 4 },
+                    { variantId: '2-C', storage: '256GB', color: 'White', cpu: 'Intel Core i5', price: 850, stock: 2 }
+                ]
+            },
+            {
+                id: 3,
+                name: 'ROG STRIX G16',
+                baseImage: 'https://dlcdnwebimgs.asus.com/gain/E20134EE-F6B3-4AB7-A1B5-73795E91011D/w300',
+                variants: [
+                    { variantId: '3-A', storage: '1TB', color: 'Black', cpu: 'Intel Core i7', price: 1299, stock: 5 },
+                    { variantId: '3-B', storage: '2TB', color: 'Black', cpu: 'Intel Core i9', price: 1599, stock: 3 }
+                ]
+            },
+            {
+                id: 4,
+                name: 'ROG SCAR',
+                baseImage: 'https://dlcdnwebimgs.asus.com/files/media/AE815CAE-C3DB-431B-975B-603E59127735/v1/images/large/1x/1__kv_laptop_2.png',
+                variants: [
+                    { variantId: '4-A', storage: '1TB', color: 'Black', cpu: 'Intel Core i9', price: 1699, stock: 7 },
+                    { variantId: '4-B', storage: '2TB', color: 'Black', cpu: 'Intel Core i9', price: 1899, stock: 5 }
+                ]
+            },
+            {
+                id: 5,
+                name: 'MACBOOK PRO',
+                baseImage: 'https://www.yaphone.com/5965/apple-macbook-air-13-m2-qwerty.jpg',
+                variants: [
+                    { variantId: '5-A', storage: '256GB', color: 'Silver', cpu: 'A16 Bionic', price: 1399, stock: 20 },
+                    { variantId: '5-B', storage: '512GB', color: 'Space Gray', cpu: 'A16 Bionic', price: 1599, stock: 15 },
+                    { variantId: '5-C', storage: '1TB', color: 'Silver', cpu: 'A18 Pro', price: 1899, stock: 10 }
+                ]
+            },
+            {
+                id: 6,
+                name: 'Lenovo LOQ',
+                baseImage: 'https://s3.ap-southeast-1.amazonaws.com/uploads-store/uploads/all/O4ajHGBI0bt0Sg8fRSyGpj0I8ZtvjkDBbZ3yM6te.png',
+                variants: [
+                    { variantId: '6-A', storage: '512GB', color: 'Black', cpu: 'AMD Ryzen 5', price: 1099, stock: 15 },
+                    { variantId: '6-B', storage: '1TB', color: 'Black', cpu: 'Intel Core i7', price: 1299, stock: 8 }
+                ]
+            },
+            {
+                id: 7,
+                name: 'HP Dell',
+                baseImage: 'https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/notebooks/latitude-notebooks/latitude-15-5550-laptop/mg/notebook-latitude-15-5550-rgb-silver-gallery-1.psd?fmt=png-alpha&pscan=auto&scl=1&hei=804&wid=1303&qlt=100,1&resMode=sharp2&size=1303,804&chrss=full',
+                variants: [
+                    { variantId: '7-A', storage: '256GB', color: 'Silver', cpu: 'Intel Core i3', price: 499, stock: 18 },
+                    { variantId: '7-B', storage: '512GB', color: 'Black', cpu: 'Intel Core i5', price: 699, stock: 10 }
+                ]
+            },
+            {
+                id: 8,
+                name: 'Linux Devbook',
+                baseImage: 'https://static0.xdaimages.com/wordpress/wp-content/uploads/2023/03/dell-xps-15-2023.png',
+                variants: [
+                    { variantId: '8-A', storage: '1TB', color: 'Black', cpu: 'Intel Core i7', price: 2099, stock: 7 },
+                    { variantId: '8-B', storage: '2TB', color: 'Black', cpu: 'AMD Ryzen 9', price: 2399, stock: 4 }
+                ]
+            },
         ];
-        // Store initial product stock for restock functionality
-        const initialProductStock = products.map(p => ({ id: p.id, stock: p.stock }));
 
-        let cart = [];
+        // Store initial product stock for restock functionality (deep copy)
+        const initialProductStock = JSON.parse(JSON.stringify(products));
+
+        let cart = []; // Cart now stores { productId, variantId, name, quantity, price, storage, color, cpu }
         let salesHistory = []; // Stores completed sales transactions
 
         // Get DOM elements
@@ -242,10 +359,24 @@
         const printReportButton = document.getElementById('print-report-button');
         const shoppingCartAside = document.getElementById('shopping-cart-aside');
 
+        // Product Options Modal elements
+        const productOptionsModal = document.getElementById('product-options-modal');
+        const modalProductName = document.getElementById('modal-product-name');
+        const modalProductImage = document.getElementById('modal-product-image');
+        const selectStorage = document.getElementById('select-storage');
+        const selectColor = document.getElementById('select-color');
+        const selectCpu = document.getElementById('select-cpu');
+        const modalProductPrice = document.getElementById('modal-product-price');
+        const modalProductStock = document.getElementById('modal-product-stock');
+        const addVariantToCartButton = document.getElementById('add-variant-to-cart-button');
+        const cancelProductOptions = document.getElementById('cancel-product-options');
+        let currentProductForModal = null; // To store the product being configured
+
         const customerInfoModal = document.getElementById('customer-info-modal');
         const customerTypeSelect = document.getElementById('customer-type');
         const customerNameInput = document.getElementById('customer-name');
         const customerPhoneInput = document.getElementById('customer-phone');
+        const paymentMethodRadios = document.querySelectorAll('input[name="payment-method"]');
         const submitCustomerInfoButton = document.getElementById('submit-customer-info');
         const cancelCustomerInfoButton = document.getElementById('cancel-customer-info');
 
@@ -301,13 +432,18 @@
             customerNameInput.value = ''; // Clear fields
             customerPhoneInput.value = '';
             customerTypeSelect.value = 'Normal'; // Reset to default
-            console.log("Customer info modal cancelled.");
+            document.querySelector('input[name="payment-method"][value="Cash"]').checked = true; // Reset payment method
+        });
+
+        // Event listener for product options modal close button
+        cancelProductOptions.addEventListener('click', () => {
+            productOptionsModal.classList.add('hidden');
+            currentProductForModal = null;
         });
 
         // Event listener for invoice modal close button
         closeInvoiceButton.addEventListener('click', () => {
             invoiceModal.classList.add('hidden');
-            console.log("Invoice modal closed.");
         });
 
         /**
@@ -319,7 +455,6 @@
                 section.classList.add('hidden');
             });
             document.getElementById(`${pageName}-page`).classList.remove('hidden');
-            console.log(`Switched to page: ${pageName}`);
 
             // Re-render content based on the page
             if (pageName === 'products') {
@@ -344,43 +479,139 @@
 
         /**
          * Renders all products in the product list section.
-         * Updates stock display and disables "Add to Cart" if out of stock.
+         * Now uses a "Select Options" button to open a modal for variant selection.
          */
         function renderProducts() {
             productListDiv.innerHTML = ''; // Clear existing products
             products.forEach(product => {
-                const isOutOfStock = product.stock <= 0;
-                const buttonClasses = isOutOfStock
+                // Determine if ANY variant is in stock to enable the button
+                const hasAnyStock = product.variants.some(v => v.stock > 0);
+                const buttonClasses = !hasAnyStock
                     ? 'bg-red-400 cursor-not-allowed'
                     : 'bg-blue-500 hover:bg-blue-600 transition duration-300 transform hover:scale-105 active:scale-95';
 
                 const productCard = document.createElement('div');
-                productCard.className = `bg-gray-50 p-4 rounded-lg shadow-sm flex flex-col items-center border border-gray-200 ${isOutOfStock ? 'opacity-70' : 'hover:shadow-md hover:border-blue-300'}`;
+                productCard.className = `bg-gray-50 p-4 rounded-lg shadow-sm flex flex-col items-center border border-gray-200 ${!hasAnyStock ? 'opacity-70' : 'hover:shadow-md hover:border-blue-300'}`;
                 productCard.innerHTML = `
-                    <img src="${product.image}" alt="${product.name}" class="w-32 h-32 object-contain rounded-md mb-3 border border-gray-300 bg-white p-1">
+                    <img src="${product.baseImage}" alt="${product.name}" class="w-32 h-32 object-contain rounded-md mb-3 border border-gray-300 bg-white p-1">
                     <h3 class="text-lg font-semibold text-gray-800 text-center mb-1">${product.name}</h3>
-                    <p class="text-blue-600 font-bold text-xl mb-1">${formatCurrency(product.price)}</p>
-                    <p class="text-sm text-gray-500 mb-3">Stock: <span class="font-bold ${isOutOfStock ? 'text-red-500' : 'text-green-600'}">${product.stock}</span></p>
-                    <button class="add-to-cart-btn text-white font-medium py-2 px-4 rounded-full w-full ${buttonClasses}" data-product-id="${product.id}" ${isOutOfStock ? 'disabled' : ''}>
-                        ${isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+                    <p class="text-sm text-gray-500 mb-3">Starting from ${formatCurrency(Math.min(...product.variants.map(v => v.price)))}</p>
+                    <button class="select-options-btn text-white font-medium py-2 px-4 rounded-full w-full ${buttonClasses}" data-product-id="${product.id}" ${!hasAnyStock ? 'disabled' : ''}>
+                        ${!hasAnyStock ? 'Out of Stock' : 'Select Options'}
                     </button>
                 `;
                 productListDiv.appendChild(productCard);
             });
 
-            // Add event listeners to "Add to Cart" buttons
-            document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+            // Add event listeners to "Select Options" buttons
+            document.querySelectorAll('.select-options-btn').forEach(button => {
                 button.addEventListener('click', (event) => {
                     const productId = parseInt(event.target.dataset.productId);
-                    addItemToCart(productId);
+                    openProductOptionsModal(productId);
                 });
             });
-            console.log("Products rendered.");
         }
 
         /**
+         * Opens the product options modal for a given product ID.
+         * Populates options and sets up dynamic updates.
+         * @param {number} productId - The ID of the product to configure.
+         */
+        function openProductOptionsModal(productId) {
+            currentProductForModal = products.find(p => p.id === productId);
+            if (!currentProductForModal) return;
+
+            modalProductName.textContent = currentProductForModal.name;
+            modalProductImage.src = currentProductForModal.baseImage;
+            modalProductImage.alt = currentProductForModal.name;
+
+            // Get unique options for this product
+            const storages = [...new Set(currentProductForModal.variants.map(v => v.storage))].sort();
+            const colors = [...new Set(currentProductForModal.variants.map(v => v.color))].sort();
+            const cpus = [...new Set(currentProductForModal.variants.map(v => v.cpu))].sort();
+
+            // Populate dropdowns
+            selectStorage.innerHTML = storages.map(s => `<option value="${s}">${s}</option>`).join('');
+            selectColor.innerHTML = colors.map(c => `<option value="${c}">${c}</option>`).join('');
+            selectCpu.innerHTML = cpus.map(c => `<option value="${c}">${c}</option>`).join('');
+
+            // Add event listeners to update price and stock when selections change
+            [selectStorage, selectColor, selectCpu].forEach(selectElement => {
+                selectElement.onchange = updateProductOptionsDisplay;
+            });
+
+            // Initial display update
+            updateProductOptionsDisplay();
+
+            productOptionsModal.classList.remove('hidden');
+        }
+
+        /**
+         * Updates the price and stock displayed in the product options modal
+         * based on the currently selected variant options.
+         */
+        function updateProductOptionsDisplay() {
+            const selectedStorage = selectStorage.value;
+            const selectedColor = selectColor.value;
+            const selectedCpu = selectCpu.value;
+
+            const selectedVariant = currentProductForModal.variants.find(v =>
+                v.storage === selectedStorage &&
+                v.color === selectedColor &&
+                v.cpu === selectedCpu
+            );
+
+            if (selectedVariant) {
+                modalProductPrice.textContent = formatCurrency(selectedVariant.price);
+                modalProductStock.textContent = selectedVariant.stock;
+                addVariantToCartButton.disabled = selectedVariant.stock <= 0;
+                if (selectedVariant.stock <= 0) {
+                    addVariantToCartButton.classList.add('bg-red-400', 'cursor-not-allowed');
+                    addVariantToCartButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                    modalProductStock.classList.add('text-red-500');
+                    modalProductStock.classList.remove('text-green-600');
+                } else {
+                    addVariantToCartButton.classList.remove('bg-red-400', 'cursor-not-allowed');
+                    addVariantToCartButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                    modalProductStock.classList.remove('text-red-500');
+                    modalProductStock.classList.add('text-green-600');
+                }
+            } else {
+                modalProductPrice.textContent = formatCurrency(0); // Should not happen with correct data
+                modalProductStock.textContent = 'N/A';
+                addVariantToCartButton.disabled = true;
+                addVariantToCartButton.classList.add('bg-red-400', 'cursor-not-allowed');
+                addVariantToCartButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                modalProductStock.classList.add('text-red-500');
+                modalProductStock.classList.remove('text-green-600');
+            }
+        }
+
+        /**
+         * Event listener for the "Add to Cart" button within the product options modal.
+         */
+        addVariantToCartButton.addEventListener('click', () => {
+            const selectedStorage = selectStorage.value;
+            const selectedColor = selectColor.value;
+            const selectedCpu = selectCpu.value;
+
+            const selectedVariant = currentProductForModal.variants.find(v =>
+                v.storage === selectedStorage &&
+                v.color === selectedColor &&
+                v.cpu === selectedCpu
+            );
+
+            if (selectedVariant) {
+                addItemToCart(currentProductForModal.id, selectedVariant.variantId);
+                productOptionsModal.classList.add('hidden'); // Close modal after adding
+            } else {
+                showMessageBox("Please select valid options for the product.");
+            }
+        });
+
+        /**
          * Renders the stock management section.
-         * Allows updating stock levels for each product.
+         * Now shows variants for each product.
          */
         function renderStockManagement() {
             stockListDiv.innerHTML = '';
@@ -390,47 +621,55 @@
             }
 
             products.forEach(product => {
-                const stockItemDiv = document.createElement('div');
-                stockItemDiv.className = 'flex flex-col sm:flex-row items-center justify-between bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200';
-                stockItemDiv.innerHTML = `
-                    <div class="flex items-center mb-2 sm:mb-0">
-                        <img src="${product.image}" alt="${product.name}" class="w-16 h-16 object-contain rounded-md mr-4 border border-gray-300 bg-white p-1">
-                        <span class="font-medium text-gray-800 text-lg">${product.name}</span>
-                    </div>
-                    <div class="flex items-center mt-2 sm:mt-0">
-                        <span class="text-gray-600 mr-2">Current Stock: <span class="font-bold text-blue-600">${product.stock}</span></span>
-                        <input type="number" min="0" value="${product.stock}" class="w-24 px-2 py-1 border rounded-md text-center stock-input" data-product-id="${product.id}">
-                        <button class="update-stock-btn bg-purple-600 hover:bg-purple-700 text-white font-medium py-1 px-3 rounded-md ml-2 transition duration-300 transform hover:scale-105 active:scale-95" data-product-id="${product.id}">
-                            Update
-                        </button>
-                    </div>
-                `;
-                stockListDiv.appendChild(stockItemDiv);
+                const productHeader = document.createElement('div');
+                productHeader.className = 'font-bold text-xl text-gray-800 mb-2 mt-4 border-b pb-2';
+                productHeader.textContent = product.name;
+                stockListDiv.appendChild(productHeader);
+
+                product.variants.forEach(variant => {
+                    const stockItemDiv = document.createElement('div');
+                    stockItemDiv.className = 'flex flex-col sm:flex-row items-center justify-between bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200 mb-2';
+                    stockItemDiv.innerHTML = `
+                        <div class="flex items-center mb-2 sm:mb-0">
+                            <img src="${product.baseImage}" alt="${product.name}" class="w-12 h-12 object-contain rounded-md mr-4 border border-gray-300 bg-white p-1">
+                            <span class="font-medium text-gray-800 text-base">
+                                ${variant.storage} / ${variant.color} / ${variant.cpu}
+                            </span>
+                        </div>
+                        <div class="flex items-center mt-2 sm:mt-0">
+                            <span class="text-gray-600 mr-2">Current Stock: <span class="font-bold text-blue-600">${variant.stock}</span></span>
+                            <input type="number" min="0" value="${variant.stock}" class="w-24 px-2 py-1 border rounded-md text-center stock-input" data-product-id="${product.id}" data-variant-id="${variant.variantId}">
+                            <button class="update-stock-btn bg-purple-600 hover:bg-purple-700 text-white font-medium py-1 px-3 rounded-md ml-2 transition duration-300 transform hover:scale-105 active:scale-95" data-product-id="${product.id}" data-variant-id="${variant.variantId}">
+                                Update
+                            </button>
+                        </div>
+                    `;
+                    stockListDiv.appendChild(stockItemDiv);
+                });
             });
 
             // Add event listeners for update stock buttons
             document.querySelectorAll('.update-stock-btn').forEach(button => {
                 button.addEventListener('click', (event) => {
                     const productId = parseInt(event.target.dataset.productId);
-                    const stockInput = document.querySelector(`.stock-input[data-product-id="${productId}"]`);
+                    const variantId = event.target.dataset.variantId;
+                    const stockInput = document.querySelector(`.stock-input[data-product-id="${productId}"][data-variant-id="${variantId}"]`);
                     const newStock = parseInt(stockInput.value);
 
                     if (!isNaN(newStock) && newStock >= 0) {
-                        const productToUpdate = products.find(p => p.id === productId);
-                        if (productToUpdate) {
-                            productToUpdate.stock = newStock;
+                        const product = products.find(p => p.id === productId);
+                        const variantToUpdate = product ? product.variants.find(v => v.variantId === variantId) : null;
+                        if (variantToUpdate) {
+                            variantToUpdate.stock = newStock;
                             renderStockManagement(); // Re-render to show updated stock
                             renderProducts(); // Update product view as well
-                            showMessageBox(`${productToUpdate.name} stock updated to ${newStock}.`);
-                            console.log(`Stock for ${productToUpdate.name} updated to ${newStock}.`);
+                            showMessageBox(`${product.name} (${variantToUpdate.storage}, ${variantToUpdate.color}, ${variantToUpdate.cpu}) stock updated to ${newStock}.`);
                         }
                     } else {
                         showMessageBox("Please enter a valid stock number.");
-                        console.warn("Invalid stock input.");
                     }
                 });
             });
-            console.log("Stock management rendered.");
         }
 
 
@@ -451,7 +690,6 @@
 
             if (salesHistory.length === 0) {
                 emptyHistoryMessage.classList.remove('hidden');
-                console.log("Sales history is empty.");
             } else {
                 // Sort history by date, newest first
                 const sortedHistory = [...salesHistory].sort((a, b) => b.timestamp - a.timestamp);
@@ -477,12 +715,13 @@
                         <h4 class="font-bold text-lg text-gray-800 mb-2">Sale #${salesHistory.length - index} on ${formattedDate}</h4>
                         <p class="text-gray-700">Customer Type: <span class="font-semibold">${sale.customer.type || 'N/A'}</span></p>
                         <p class="text-gray-700">Customer: ${sale.customer.name || 'N/A'} (${sale.customer.phone || 'N/A'})</p>
+                        <p class="text-gray-700">Payment Method: <span class="font-semibold">${sale.paymentMethod || 'N/A'}</span></p>
                         <p class="text-gray-700 mb-2">Total: <span class="font-bold text-blue-600">${formatCurrency(sale.total)}</span></p>
                         <div class="ml-4 text-sm text-gray-600">
                             <p class="font-semibold">Items Purchased:</p>
                             <ol class="list-decimal pl-5">
                                 ${sale.items.map(item => `
-                                    <li>${item.name} (x${item.quantity}) - ${formatCurrency(item.price * item.quantity)}</li>
+                                    <li>${item.productName} (${item.storage}, ${item.color}, ${item.cpu}) (x${item.quantity}) - ${formatCurrency(item.price * item.quantity)}</li>
                                 `).join('')}
                             </ol>
                         </div>
@@ -494,68 +733,72 @@
             dailyTotalSalesSpan.textContent = formatCurrency(dailyTotalSales);
             dailyTotalItemsSpan.textContent = dailyTotalItems;
             dailyTotalTransactionsSpan.textContent = dailyTotalTransactions;
-            console.log("Sales history and daily report rendered.");
         }
 
         /**
-         * Adds an item to the shopping cart or increments its quantity.
+         * Adds an item (specific variant) to the shopping cart or increments its quantity.
          * Checks for sufficient stock before adding.
-         * @param {number} productId - The ID of the product to add.
+         * @param {number} productId - The ID of the parent product.
+         * @param {string} variantId - The unique ID of the specific variant to add.
          */
-        function addItemToCart(productId) {
-            const productToAdd = products.find(p => p.id === productId);
-            if (productToAdd) {
-                const existingItem = cart.find(item => item.id === productId);
+        function addItemToCart(productId, variantId) {
+            const product = products.find(p => p.id === productId);
+            const variantToAdd = product ? product.variants.find(v => v.variantId === variantId) : null;
 
-                // Check stock before adding
-                if (productToAdd.stock <= 0) {
-                    showMessageBox(`Sorry, ${productToAdd.name} is out of stock!`);
-                    console.warn(`${productToAdd.name} is out of stock.`);
-                    return; // Do not add to cart
-                }
-                if (existingItem && existingItem.quantity >= productToAdd.stock) {
-                    showMessageBox(`You already have all available ${productToAdd.name} in your cart.`);
-                    console.warn(`Attempted to add more ${productToAdd.name} than available stock.`);
-                    return; // Do not add more if all stock is in cart
-                }
-
-                if (existingItem) {
-                    existingItem.quantity++;
-                    console.log(`Incremented quantity for ${productToAdd.name}. New quantity: ${existingItem.quantity}`);
-                } else {
-                    cart.push({ ...productToAdd, quantity: 1 });
-                    console.log(`Added ${productToAdd.name} to cart.`);
-                }
-                updateCartDisplay();
-                // Add highlight animation to cart
-                shoppingCartAside.classList.add('cart-highlight');
-                setTimeout(() => {
-                    shoppingCartAside.classList.remove('cart-highlight');
-                }, 500);
-            } else {
-                console.error(`Product with ID ${productId} not found.`);
+            if (!product || !variantToAdd) {
+                console.error(`Product or variant not found: Product ID ${productId}, Variant ID ${variantId}`);
+                showMessageBox("Error: Product variant not found.");
+                return;
             }
+
+            const existingItemInCartIndex = cart.findIndex(item => item.variantId === variantId);
+
+            // Check stock before adding
+            if (variantToAdd.stock <= 0) {
+                showMessageBox(`Sorry, ${product.name} (${variantToAdd.storage}, ${variantToAdd.color}, ${variantToAdd.cpu}) is out of stock!`);
+                return;
+            }
+
+            if (existingItemInCartIndex > -1) {
+                if (cart[existingItemInCartIndex].quantity >= variantToAdd.stock) {
+                    showMessageBox(`You already have all available ${product.name} (${variantToAdd.storage}, ${variantToAdd.color}, ${variantToAdd.cpu}) in your cart.`);
+                    return;
+                }
+                cart[existingItemInCartIndex].quantity++;
+            } else {
+                cart.push({
+                    productId: product.id,
+                    variantId: variantToAdd.variantId,
+                    productName: product.name,
+                    storage: variantToAdd.storage,
+                    color: variantToAdd.color,
+                    cpu: variantToAdd.cpu,
+                    price: variantToAdd.price,
+                    quantity: 1
+                });
+            }
+            updateCartDisplay();
+            // Add highlight animation to cart
+            shoppingCartAside.classList.add('cart-highlight');
+            setTimeout(() => {
+                shoppingCartAside.classList.remove('cart-highlight');
+            }, 500);
         }
 
         /**
-         * Removes an item from the shopping cart or decrements its quantity.
+         * Removes an item (specific variant) from the shopping cart or decrements its quantity.
          * If quantity becomes 0, the item is removed from the cart.
-         * @param {number} productId - The ID of the product to remove.
+         * @param {string} variantId - The unique ID of the specific variant to remove.
          */
-        function removeItemFromCart(productId) {
-            const itemIndex = cart.findIndex(item => item.id === productId);
+        function removeItemFromCart(variantId) {
+            const itemIndex = cart.findIndex(item => item.variantId === variantId);
             if (itemIndex > -1) {
                 if (cart[itemIndex].quantity > 1) {
                     cart[itemIndex].quantity--;
-                    console.log(`Decremented quantity for product ID ${productId}. New quantity: ${cart[itemIndex].quantity}`);
                 } else {
-                    const removedItemName = cart[itemIndex].name;
                     cart.splice(itemIndex, 1); // Remove item if quantity is 1
-                    console.log(`Removed ${removedItemName} from cart.`);
                 }
                 updateCartDisplay();
-            } else {
-                console.warn(`Attempted to remove non-existent item with product ID ${productId} from cart.`);
             }
         }
 
@@ -568,14 +811,12 @@
 
             if (cart.length === 0) {
                 emptyCartMessage.classList.remove('hidden');
-                checkoutButton.disabled = true;
+                checkoutButton.disabled = true; // Disable checkout if cart is empty
                 checkoutButton.classList.add('opacity-50', 'cursor-not-allowed');
-                console.log("Cart is empty. Checkout button disabled.");
             } else {
                 emptyCartMessage.classList.add('hidden');
-                checkoutButton.disabled = false;
+                checkoutButton.disabled = false; // Enable checkout if cart has items
                 checkoutButton.classList.remove('opacity-50', 'cursor-not-allowed');
-                console.log("Cart has items. Checkout button enabled.");
 
                 cart.forEach(item => {
                     const itemTotal = item.price * item.quantity;
@@ -584,13 +825,14 @@
                     const cartItemDiv = document.createElement('div');
                     cartItemDiv.className = 'flex items-center justify-between bg-gray-50 p-3 rounded-lg shadow-sm border border-gray-200';
                     cartItemDiv.innerHTML = `
-                        <div class="flex items-center">
-                            <span class="font-medium text-gray-800 mr-2">${item.name}</span>
+                        <div class="flex flex-col items-start">
+                            <span class="font-medium text-gray-800">${item.productName}</span>
+                            <span class="text-xs text-gray-600">(${item.storage}, ${item.color}, ${item.cpu})</span>
                             <span class="text-sm text-gray-600">(x${item.quantity})</span>
                         </div>
                         <div class="flex items-center">
                             <span class="font-bold text-blue-500 mr-3">${formatCurrency(itemTotal)}</span>
-                            <button class="remove-from-cart-btn text-red-500 hover:text-red-700 transition duration-300" data-product-id="${item.id}">
+                            <button class="remove-from-cart-btn text-red-500 hover:text-red-700 transition duration-300" data-variant-id="${item.variantId}">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm6 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd" />
                                 </svg>
@@ -606,31 +848,24 @@
             // Add event listeners to "Remove from Cart" buttons
             document.querySelectorAll('.remove-from-cart-btn').forEach(button => {
                 button.addEventListener('click', (event) => {
-                    // Ensure we get the product ID correctly even if SVG is clicked
-                    const productId = parseInt(event.target.closest('button').dataset.productId);
-                    removeItemFromCart(productId);
+                    const variantId = event.target.closest('button').dataset.variantId;
+                    removeItemFromCart(variantId);
                 });
             });
-            console.log("Cart display updated. Current total:", formatCurrency(total));
         }
 
         /**
          * Initiates the checkout process by showing the customer information modal.
          */
         function initiateCheckout() {
-            console.log("Attempting to initiate checkout...");
             if (cart.length > 0) {
                 customerInfoModal.classList.remove('hidden');
                 customerNameInput.focus(); // Focus on the first input field
-                console.log("Customer info modal displayed.");
             } else {
                 showMessageBox("Your cart is empty. Please add items before checking out.");
-                console.warn("Checkout attempted with empty cart.");
             }
         }
-
-        // Event listener for the checkout button
-        checkoutButton.addEventListener('click', initiateCheckout); // Direct call, cleaner
+        checkoutButton.addEventListener('click', initiateCheckout);
 
         /**
          * Calculates the total amount with discounts based on customer type.
@@ -645,9 +880,7 @@
             } else if (customerType === 'VIP') {
                 discountRate = 0.25; // 25% discount for VIP
             }
-            const discountedTotal = subtotal * (1 - discountRate);
-            console.log(`Subtotal: ${subtotal}, Customer Type: ${customerType}, Discount Rate: ${discountRate*100}%, Final Total: ${discountedTotal}`);
-            return discountedTotal;
+            return subtotal * (1 - discountRate);
         }
 
         /**
@@ -655,10 +888,10 @@
          * Decrements stock for purchased items, saves transaction, and generates invoice.
          */
         submitCustomerInfoButton.addEventListener('click', () => {
-            console.log("Submit customer info button clicked. Completing purchase...");
             const customerName = customerNameInput.value.trim();
             const customerPhone = customerPhoneInput.value.trim();
             const customerType = customerTypeSelect.value;
+            const selectedPaymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
             const transactionTimestamp = Date.now();
 
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -676,17 +909,19 @@
                 items: JSON.parse(JSON.stringify(cart)), // Deep copy of cart items
                 subtotal: subtotal,
                 discountApplied: subtotal - transactionTotal,
-                total: transactionTotal
+                total: transactionTotal,
+                paymentMethod: selectedPaymentMethod
             };
             salesHistory.push(transaction);
-            console.log("Transaction recorded:", transaction);
 
             // Decrement stock for each item in the cart
             cart.forEach(cartItem => {
-                const productInStock = products.find(p => p.id === cartItem.id);
-                if (productInStock) {
-                    productInStock.stock -= cartItem.quantity;
-                    console.log(`Stock for ${productInStock.name} reduced by ${cartItem.quantity}. New stock: ${productInStock.stock}`);
+                const product = products.find(p => p.id === cartItem.productId);
+                if (product) {
+                    const variantInStock = product.variants.find(v => v.variantId === cartItem.variantId);
+                    if (variantInStock) {
+                        variantInStock.stock -= cartItem.quantity;
+                    }
                 }
             });
 
@@ -703,8 +938,8 @@
             customerNameInput.value = '';
             customerPhoneInput.value = '';
             customerTypeSelect.value = 'Normal';
+            document.querySelector('input[name="payment-method"][value="Cash"]').checked = true; // Reset payment method
             showMessageBox("Purchase completed successfully!");
-            console.log("Purchase successfully completed!");
         });
 
 
@@ -716,7 +951,7 @@
             const invoiceItemsHTML = transaction.items.map((item, index) => `
                 <tr>
                     <td class="border px-4 py-2">${index + 1}</td>
-                    <td class="border px-4 py-2">${item.name}</td>
+                    <td class="border px-4 py-2">${item.productName} (${item.storage}, ${item.color}, ${item.cpu})</td>
                     <td class="border px-4 py-2">${item.quantity}</td>
                     <td class="border px-4 py-2">${formatCurrency(item.price)}</td>
                     <td class="border px-4 py-2">${formatCurrency(item.price * item.quantity)}</td>
@@ -728,12 +963,13 @@
                     <h2 class="text-xl font-bold text-gray-800 mb-2 text-center">Receipt</h2>
                     <p class="text-sm text-gray-600 text-center mb-4">Transaction ID: #${transaction.id}</p>
                     <p class="text-sm text-gray-600 text-center mb-4">Date: ${new Date(transaction.timestamp).toLocaleString()}</p>
-                    
+
                     <div class="mb-4">
                         <p class="text-md font-semibold text-gray-700">Customer Details:</p>
                         <p class="text-sm text-gray-600">Name: ${transaction.customer.name}</p>
                         <p class="text-sm text-gray-600">Phone: ${transaction.customer.phone}</p>
                         <p class="text-sm text-gray-600">Type: ${transaction.customer.type}</p>
+                        <p class="text-sm text-gray-600">Payment: ${transaction.paymentMethod}</p>
                     </div>
 
                     <table class="w-full text-left table-auto">
@@ -762,30 +998,32 @@
             `;
             invoiceContent.innerHTML = invoiceHTML;
             invoiceModal.classList.remove('hidden');
-            console.log("Invoice displayed.");
         }
 
         /**
-         * Resets all product stock to their initial values.
+         * Resets all product stock to their initial values, including variants.
          */
         restockButton.addEventListener('click', () => {
             products.forEach(product => {
-                const initialStock = initialProductStock.find(p => p.id === product.id);
-                if (initialStock) {
-                    product.stock = initialStock.stock;
+                const initialProduct = initialProductStock.find(p => p.id === product.id);
+                if (initialProduct) {
+                    product.variants.forEach(variant => {
+                        const initialVariant = initialProduct.variants.find(v => v.variantId === variant.variantId);
+                        if (initialVariant) {
+                            variant.stock = initialVariant.stock;
+                        }
+                    });
                 }
             });
             renderProducts();
             renderStockManagement();
             showMessageBox("All products have been restocked to their initial quantities!");
-            console.log("All products restocked.");
         });
 
         /**
          * Generates and prints a daily sales report as a PDF.
          */
         printReportButton.addEventListener('click', () => {
-            console.log("Generating daily report PDF...");
             const reportDate = reportDateSpan.textContent;
             const dailySales = dailyTotalSalesSpan.textContent;
             const dailyItems = dailyTotalItemsSpan.textContent;
@@ -816,7 +1054,7 @@
                                     <td class="border px-4 py-2">${sale.customer.name} (${sale.customer.type})</td>
                                     <td class="border px-4 py-2">
                                         <ul class="list-disc pl-5">
-                                            ${sale.items.map(item => `<li>${item.name} (x${item.quantity})</li>`).join('')}
+                                            ${sale.items.map(item => `<li>${item.productName} (${item.storage}) (x${item.quantity})</li>`).join('')}
                                         </ul>
                                     </td>
                                     <td class="border px-4 py-2">${formatCurrency(sale.total)}</td>
@@ -851,14 +1089,12 @@
                 html2canvas: { scale: 2 },
                 jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
             }).save();
-            console.log("Daily report PDF generated.");
         });
 
         // Login/Logout functionality
         loginButton.addEventListener('click', () => {
             const username = usernameInput.value;
             const password = passwordInput.value;
-            console.log(`Login attempt with: ${username} / ${password}`);
 
             if (username === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
                 loginModal.classList.add('hidden');
@@ -867,15 +1103,12 @@
                 mainFooter.classList.remove('hidden');
                 showMessageBox("Login successful! Welcome, Admin.");
                 showPage('products'); // Show products page after successful login
-                console.log("Login successful.");
             } else {
                 loginErrorMessage.classList.remove('hidden');
-                console.warn("Login failed: Invalid credentials.");
             }
         });
 
         logoutButton.addEventListener('click', () => {
-            console.log("Logging out...");
             mainHeader.classList.add('hidden');
             mainContent.classList.add('hidden');
             mainFooter.classList.add('hidden');
@@ -884,7 +1117,6 @@
             passwordInput.value = ADMIN_PASSWORD; // Reset to default
             loginErrorMessage.classList.add('hidden'); // Hide error message
             showMessageBox("You have been logged out.");
-            console.log("Logout successful.");
         });
 
         // Initial rendering when the page loads
@@ -894,8 +1126,79 @@
             usernameInput.focus();
             updateCartDisplay(); // Initialize cart display and button state
             renderSalesHistoryAndReport(); // Initialize daily report date
-            console.log("Application initialized. Login modal displayed.");
         });
+        // ... (rest of your existing JavaScript code above the submitCustomerInfoButton event listener)
+
+        /**
+         * Completes the purchase after customer information is entered.
+         * Decrements stock for purchased items, saves transaction, and generates invoice.
+         */
+        submitCustomerInfoButton.addEventListener('click', () => {
+            const customerName = customerNameInput.value.trim();
+            const customerPhone = customerPhoneInput.value.trim();
+            const customerType = customerTypeSelect.value;
+            const selectedPaymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
+            const transactionTimestamp = Date.now();
+
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const transactionTotal = calculateDiscountedTotal(subtotal, customerType);
+
+            // Store transaction
+            const transaction = {
+                id: salesHistory.length + 1, // Simple ID generation
+                timestamp: transactionTimestamp,
+                customer: {
+                    name: customerName || 'Anonymous',
+                    phone: customerPhone || 'N/A',
+                    type: customerType
+                },
+                items: JSON.parse(JSON.stringify(cart)), // Deep copy of cart items
+                subtotal: subtotal,
+                discountApplied: subtotal - transactionTotal,
+                total: transactionTotal,
+                paymentMethod: selectedPaymentMethod
+            };
+            salesHistory.push(transaction);
+
+            // Decrement stock for each item in the cart
+            cart.forEach(cartItem => {
+                const product = products.find(p => p.id === cartItem.productId);
+                if (product) {
+                    const variantInStock = product.variants.find(v => v.variantId === cartItem.variantId);
+                    if (variantInStock) {
+                        variantInStock.stock -= cartItem.quantity;
+                    }
+                }
+            });
+
+            customerInfoModal.classList.add('hidden'); // Hide customer info modal
+
+            // --- New: Show payment success message ---
+            showMessageBox("Payment successful! Thank you for your purchase.");
+            // The message box will automatically close when "OK" is clicked,
+            // then the invoice will be displayed.
+            messageCloseButton.onclick = () => { // Temporarily reassign onclick for this sequence
+                messageBox.classList.add('hidden');
+                displayInvoice(transaction);
+                // Reset onclick to default for future showMessageBox calls
+                messageCloseButton.onclick = () => { messageBox.classList.add('hidden'); };
+            };
+            // --- End New ---
+
+            // Clear cart, update displays, and hide modal
+            cart = [];
+            updateCartDisplay();
+            renderProducts(); // Update product display to reflect new stock
+            renderStockManagement(); // Update stock management view
+            renderSalesHistoryAndReport(); // Update sales history view
+
+            customerNameInput.value = ''; // Clear fields
+            customerPhoneInput.value = '';
+            customerTypeSelect.value = 'Normal'; // Reset to default
+            document.querySelector('input[name="payment-method"][value="Cash"]').checked = true; // Reset payment method
+        });
+
+// ... (rest of your existing JavaScript code below the submitCustomerInfoButton event listener)
     </script>
 </body>
 </html>
