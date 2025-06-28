@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comprehensive Mini Mart</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- html2pdf.js CDN for PDF generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         /* Custom styles for the Inter font and general body styling */
@@ -45,12 +43,38 @@
         .pdf-content th {
             background-color: #f2f2f2;
         }
+        /* Cart highlight animation */
+        .cart-highlight {
+            animation: highlight 0.5s ease-out;
+        }
+        @keyframes highlight {
+            from { transform: scale(1); box-shadow: 0 0 0 rgba(59, 130, 246, 0.7); }
+            50% { transform: scale(1.02); box-shadow: 0 0 15px rgba(59, 130, 246, 0.7); }
+            to { transform: scale(1); box-shadow: 0 0 0 rgba(59, 130, 246, 0); }
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Header Section -->
-    <header class="header_main">
+    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg p-8 shadow-xl max-w-sm w-full">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Admin Login</h2>
+            <div class="mb-4">
+                <label for="username-input" class="block text-gray-700 text-sm font-bold mb-2">Email:</label>
+                <input type="email" id="username-input" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="admin@gmail.com">
+            </div>
+            <div class="mb-6">
+                <label for="password-input" class="block text-gray-700 text-sm font-bold mb-2">Password:</label>
+                <input type="password" id="password-input" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline" value="1234">
+            </div>
+            <button id="login-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg w-full transition duration-300">
+                Login
+            </button>
+            <p id="login-error-message" class="text-red-500 text-center text-sm mt-4 hidden">Invalid email or password.</p>
+        </div>
+    </div>
+
+    <header class="header_main bg-gray-800 text-white p-4 shadow-md hidden" id="main-header">
         <div class="container mx-auto flex flex-col sm:flex-row items-center justify-between">
             <h1 class="text-3xl font-extrabold tracking-tight mb-2 sm:mb-0">🛒 Computer Store</h1>
             <nav>
@@ -58,65 +82,59 @@
                     <li><a href="#" class="nav-link hover:text-blue-200 transition duration-300" data-page="products">Category</a></li>
                     <li><a href="#" class="nav-link hover:text-blue-200 transition duration-300" data-page="stock">Inventory Management</a></li>
                     <li><a href="#" class="nav-link hover:text-blue-200 transition duration-300" data-page="history">Report Daily</a></li>
+                    <li><button id="logout-button" class="nav-link bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded-md transition duration-300">Logout</button></li>
                 </ul>
             </nav>
         </div>
     </header>
 
-    <!-- Main Content Area -->
-    <main class="container mx-auto px-4 py-8 flex-grow flex flex-col lg:flex-row gap-8">
+    <main class="container mx-auto px-4 py-8 flex-grow flex flex-col lg:flex-row gap-8 hidden" id="main-content">
 
-        <!-- Product Display Section (Initially Visible) -->
-        <section id="products-page" class="page-section flex-1 bg-white p-6 rounded-xl shadow-md">
-            <div class="flex justify-between items-center mb-6 border-b-2 pb-2">
-                <h2 class="text-2xl font-bold text-gray-800">Our Products</h2>
-                <button id="restock-button" class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-full transition duration-300 transform hover:scale-105 active:scale-95 text-sm">
-                    Restock All
-                </button>
-            </div>
-            <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                <!-- Products will be dynamically loaded here by JavaScript -->
-            </div>
-        </section>
-
-        <!-- Stock Management Section -->
-        <section id="stock-page" class="page-section flex-1 bg-white p-6 rounded-xl shadow-md hidden">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b-2 pb-2">Stock Management</h2>
-            <div id="stock-list" class="space-y-4">
-                <!-- Stock items will be dynamically loaded here by JavaScript -->
-            </div>
-        </section>
-
-        <!-- Sales History & Reports Section -->
-        <section id="history-page" class="page-section flex-1 bg-white p-6 rounded-xl shadow-md hidden">
-            <div class="flex justify-between items-center mb-6 border-b-2 pb-2">
-                <h2 class="text-2xl font-bold text-gray-800">Sales History & Daily Report</h2>
-                <button id="print-report-button" class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-full transition duration-300 transform hover:scale-105 active:scale-95 text-sm">
-                    Print Report (PDF)
-                </button>
-            </div>
-
-            <div class="mb-8">
-                <h3 class="text-xl font-semibold text-gray-700 mb-4">Daily Sales Report (<span id="report-date"></span>)</h3>
-                <div id="daily-report-summary" class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                    <p class="text-gray-700">Total Sales Today: <span id="daily-total-sales" class="font-bold text-blue-700">$0.00</span></p>
-                    <p class="text-gray-700">Items Sold Today: <span id="daily-total-items" class="font-bold text-blue-700">0</span></p>
-                    <p class="text-gray-700">Number of Transactions Today: <span id="daily-total-transactions" class="font-bold text-blue-700">0</span></p>
+        <div class="flex-grow flex flex-col gap-8">
+            <section id="products-page" class="page-section flex-1 bg-white p-6 rounded-xl shadow-md">
+                <div class="flex justify-between items-center mb-6 border-b-2 pb-2">
+                    <h2 class="text-2xl font-bold text-gray-800">Our Products</h2>
+                    <button id="restock-button" class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-full transition duration-300 transform hover:scale-105 active:scale-95 text-sm">
+                        Restock All
+                    </button>
                 </div>
-            </div>
+                <div id="product-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    </div>
+            </section>
 
-            <h3 class="text-xl font-semibold text-gray-700 mb-4">All Sales History</h3>
-            <div id="sales-history-list" class="space-y-4">
-                <p id="empty-history-message" class="text-gray-500 text-center">No sales recorded yet.</p>
-                <!-- Sales history items will be dynamically loaded here by JavaScript -->
-            </div>
-        </section>
+            <section id="stock-page" class="page-section flex-1 bg-white p-6 rounded-xl shadow-md hidden">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b-2 pb-2">Stock Management</h2>
+                <div id="stock-list" class="space-y-4">
+                    </div>
+            </section>
 
-        <!-- Shopping Cart Section (Always Visible) -->
-        <aside class="w-full lg:w-1/3 bg-white p-6 rounded-xl shadow-md sticky top-8 h-fit">
+            <section id="history-page" class="page-section flex-1 bg-white p-6 rounded-xl shadow-md hidden">
+                <div class="flex justify-between items-center mb-6 border-b-2 pb-2">
+                    <h2 class="text-2xl font-bold text-gray-800">Sales History & Daily Report</h2>
+                    <button id="print-report-button" class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-full transition duration-300 transform hover:scale-105 active:scale-95 text-sm">
+                        Print Report (PDF)
+                    </button>
+                </div>
+
+                <div class="mb-8">
+                    <h3 class="text-xl font-semibold text-gray-700 mb-4">Daily Sales Report (<span id="report-date"></span>)</h3>
+                    <div id="daily-report-summary" class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <p class="text-gray-700">Total Sales Today: <span id="daily-total-sales" class="font-bold text-blue-700">$0.00</span></p>
+                        <p class="text-gray-700">Items Sold Today: <span id="daily-total-items" class="font-bold text-blue-700">0</span></p>
+                        <p class="text-gray-700">Number of Transactions Today: <span id="daily-total-transactions" class="font-bold text-blue-700">0</span></p>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">All Sales History</h3>
+                <div id="sales-history-list" class="space-y-4">
+                    <p id="empty-history-message" class="text-gray-500 text-center">No sales recorded yet.</p>
+                    </div>
+            </section>
+        </div>
+
+        <aside id="shopping-cart-aside" class="w-full lg:w-1/3 bg-white p-6 rounded-xl shadow-md sticky top-8 h-fit">
             <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b-2 pb-2">🛒 Shopping Cart</h2>
             <div id="cart-items" class="space-y-4 mb-6">
-                <!-- Cart items will be dynamically loaded here by JavaScript -->
                 <p id="empty-cart-message" class="text-gray-500 text-center">Your cart is empty.</p>
             </div>
             <div class="border-t-2 pt-4 flex justify-between items-center">
@@ -130,14 +148,12 @@
 
     </main>
 
-    <!-- Footer Section -->
-    <footer class="bg-gray-800 text-white p-4 mt-8 rounded-t-lg">
+    <footer class="bg-gray-800 text-white p-4 mt-8 rounded-t-lg hidden" id="main-footer">
         <div class="container mx-auto text-center text-sm">
             &copy; 2025 My Computer Store. All rights reserved.
         </div>
     </footer>
 
-    <!-- Customer Info Modal -->
     <div id="customer-info-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
         <div class="bg-white rounded-lg p-6 shadow-xl max-w-md w-full">
             <h3 class="text-xl font-bold text-gray-800 mb-4">Customer Information</h3>
@@ -168,7 +184,6 @@
         </div>
     </div>
 
-    <!-- Custom Message Box for alerts -->
     <div id="message-box" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
         <div class="bg-white rounded-lg p-6 shadow-xl max-w-sm w-full text-center">
             <p id="message-content" class="text-lg font-medium text-gray-800 mb-4"></p>
@@ -178,13 +193,11 @@
         </div>
     </div>
 
-    <!-- Invoice Modal -->
     <div id="invoice-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
         <div class="bg-white rounded-lg p-6 shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">Invoice</h3>
             <div id="invoice-content">
-                <!-- Invoice details will be populated here -->
-            </div>
+                </div>
             <div class="flex justify-end mt-6">
                 <button id="close-invoice-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
                     Close
@@ -227,11 +240,12 @@
         const salesHistoryList = document.getElementById('sales-history-list');
         const emptyHistoryMessage = document.getElementById('empty-history-message');
         const printReportButton = document.getElementById('print-report-button');
+        const shoppingCartAside = document.getElementById('shopping-cart-aside');
 
         const customerInfoModal = document.getElementById('customer-info-modal');
         const customerTypeSelect = document.getElementById('customer-type');
         const customerNameInput = document.getElementById('customer-name');
-        const customerPhoneInput = document.getElementById('customer-phone'); // Changed from email
+        const customerPhoneInput = document.getElementById('customer-phone');
         const submitCustomerInfoButton = document.getElementById('submit-customer-info');
         const cancelCustomerInfoButton = document.getElementById('cancel-customer-info');
 
@@ -243,6 +257,20 @@
         const dailyTotalItemsSpan = document.getElementById('daily-total-items');
         const dailyTotalTransactionsSpan = document.getElementById('daily-total-transactions');
         const reportDateSpan = document.getElementById('report-date');
+
+        // Login elements
+        const loginModal = document.getElementById('login-modal');
+        const usernameInput = document.getElementById('username-input');
+        const passwordInput = document.getElementById('password-input');
+        const loginButton = document.getElementById('login-button');
+        const loginErrorMessage = document.getElementById('login-error-message');
+        const mainHeader = document.getElementById('main-header');
+        const mainContent = document.getElementById('main-content');
+        const mainFooter = document.getElementById('main-footer');
+        const logoutButton = document.getElementById('logout-button');
+
+        const ADMIN_EMAIL = 'admin@gmail.com';
+        const ADMIN_PASSWORD = '1234';
 
         /**
          * Utility function to format currency.
@@ -273,11 +301,13 @@
             customerNameInput.value = ''; // Clear fields
             customerPhoneInput.value = '';
             customerTypeSelect.value = 'Normal'; // Reset to default
+            console.log("Customer info modal cancelled.");
         });
 
         // Event listener for invoice modal close button
         closeInvoiceButton.addEventListener('click', () => {
             invoiceModal.classList.add('hidden');
+            console.log("Invoice modal closed.");
         });
 
         /**
@@ -289,6 +319,7 @@
                 section.classList.add('hidden');
             });
             document.getElementById(`${pageName}-page`).classList.remove('hidden');
+            console.log(`Switched to page: ${pageName}`);
 
             // Re-render content based on the page
             if (pageName === 'products') {
@@ -305,7 +336,9 @@
             link.addEventListener('click', (event) => {
                 event.preventDefault();
                 const page = event.target.dataset.page;
-                showPage(page);
+                if (page) { // Ensure data-page exists for navigation links
+                    showPage(page);
+                }
             });
         });
 
@@ -342,6 +375,7 @@
                     addItemToCart(productId);
                 });
             });
+            console.log("Products rendered.");
         }
 
         /**
@@ -388,12 +422,15 @@
                             renderStockManagement(); // Re-render to show updated stock
                             renderProducts(); // Update product view as well
                             showMessageBox(`${productToUpdate.name} stock updated to ${newStock}.`);
+                            console.log(`Stock for ${productToUpdate.name} updated to ${newStock}.`);
                         }
                     } else {
                         showMessageBox("Please enter a valid stock number.");
+                        console.warn("Invalid stock input.");
                     }
                 });
             });
+            console.log("Stock management rendered.");
         }
 
 
@@ -405,7 +442,7 @@
             emptyHistoryMessage.classList.add('hidden');
 
             const today = new Date();
-            const todayString = today.toLocaleDateString();
+            const todayString = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             reportDateSpan.textContent = todayString;
 
             let dailyTotalSales = 0;
@@ -414,16 +451,21 @@
 
             if (salesHistory.length === 0) {
                 emptyHistoryMessage.classList.remove('hidden');
+                console.log("Sales history is empty.");
             } else {
                 // Sort history by date, newest first
                 const sortedHistory = [...salesHistory].sort((a, b) => b.timestamp - a.timestamp);
 
                 sortedHistory.forEach((sale, index) => {
                     const saleDate = new Date(sale.timestamp);
-                    const formattedDate = saleDate.toLocaleString(); // e.g., "M/D/YYYY, H:MM:SS AM/PM"
+                    const formattedDate = saleDate.toLocaleString('en-US', {
+                        year: 'numeric', month: 'numeric', day: 'numeric',
+                        hour: '2-digit', minute: '2-digit', second: '2-digit',
+                        hour12: true
+                    });
 
                     // Check for daily report
-                    if (saleDate.toLocaleDateString() === todayString) {
+                    if (saleDate.toLocaleDateString('en-US') === today.toLocaleDateString('en-US')) {
                         dailyTotalSales += sale.total;
                         dailyTotalItems += sale.items.reduce((sum, item) => sum + item.quantity, 0);
                         dailyTotalTransactions++;
@@ -438,11 +480,11 @@
                         <p class="text-gray-700 mb-2">Total: <span class="font-bold text-blue-600">${formatCurrency(sale.total)}</span></p>
                         <div class="ml-4 text-sm text-gray-600">
                             <p class="font-semibold">Items Purchased:</p>
-                            <ul class="list-disc pl-5">
+                            <ol class="list-decimal pl-5">
                                 ${sale.items.map(item => `
                                     <li>${item.name} (x${item.quantity}) - ${formatCurrency(item.price * item.quantity)}</li>
                                 `).join('')}
-                            </ul>
+                            </ol>
                         </div>
                     `;
                     salesHistoryList.appendChild(saleDiv);
@@ -452,6 +494,7 @@
             dailyTotalSalesSpan.textContent = formatCurrency(dailyTotalSales);
             dailyTotalItemsSpan.textContent = dailyTotalItems;
             dailyTotalTransactionsSpan.textContent = dailyTotalTransactions;
+            console.log("Sales history and daily report rendered.");
         }
 
         /**
@@ -467,19 +510,30 @@
                 // Check stock before adding
                 if (productToAdd.stock <= 0) {
                     showMessageBox(`Sorry, ${productToAdd.name} is out of stock!`);
+                    console.warn(`${productToAdd.name} is out of stock.`);
                     return; // Do not add to cart
                 }
                 if (existingItem && existingItem.quantity >= productToAdd.stock) {
                     showMessageBox(`You already have all available ${productToAdd.name} in your cart.`);
+                    console.warn(`Attempted to add more ${productToAdd.name} than available stock.`);
                     return; // Do not add more if all stock is in cart
                 }
 
                 if (existingItem) {
                     existingItem.quantity++;
+                    console.log(`Incremented quantity for ${productToAdd.name}. New quantity: ${existingItem.quantity}`);
                 } else {
                     cart.push({ ...productToAdd, quantity: 1 });
+                    console.log(`Added ${productToAdd.name} to cart.`);
                 }
                 updateCartDisplay();
+                // Add highlight animation to cart
+                shoppingCartAside.classList.add('cart-highlight');
+                setTimeout(() => {
+                    shoppingCartAside.classList.remove('cart-highlight');
+                }, 500);
+            } else {
+                console.error(`Product with ID ${productId} not found.`);
             }
         }
 
@@ -493,10 +547,15 @@
             if (itemIndex > -1) {
                 if (cart[itemIndex].quantity > 1) {
                     cart[itemIndex].quantity--;
+                    console.log(`Decremented quantity for product ID ${productId}. New quantity: ${cart[itemIndex].quantity}`);
                 } else {
+                    const removedItemName = cart[itemIndex].name;
                     cart.splice(itemIndex, 1); // Remove item if quantity is 1
+                    console.log(`Removed ${removedItemName} from cart.`);
                 }
                 updateCartDisplay();
+            } else {
+                console.warn(`Attempted to remove non-existent item with product ID ${productId} from cart.`);
             }
         }
 
@@ -509,12 +568,14 @@
 
             if (cart.length === 0) {
                 emptyCartMessage.classList.remove('hidden');
-                checkoutButton.disabled = true; // Disable checkout if cart is empty
+                checkoutButton.disabled = true;
                 checkoutButton.classList.add('opacity-50', 'cursor-not-allowed');
+                console.log("Cart is empty. Checkout button disabled.");
             } else {
                 emptyCartMessage.classList.add('hidden');
-                checkoutButton.disabled = false; // Enable checkout if cart has items
+                checkoutButton.disabled = false;
                 checkoutButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                console.log("Cart has items. Checkout button enabled.");
 
                 cart.forEach(item => {
                     const itemTotal = item.price * item.quantity;
@@ -545,22 +606,48 @@
             // Add event listeners to "Remove from Cart" buttons
             document.querySelectorAll('.remove-from-cart-btn').forEach(button => {
                 button.addEventListener('click', (event) => {
-                    const productId = parseInt(event.target.dataset.productId || event.target.closest('button').dataset.productId);
+                    // Ensure we get the product ID correctly even if SVG is clicked
+                    const productId = parseInt(event.target.closest('button').dataset.productId);
                     removeItemFromCart(productId);
                 });
             });
+            console.log("Cart display updated. Current total:", formatCurrency(total));
         }
 
         /**
          * Initiates the checkout process by showing the customer information modal.
          */
         function initiateCheckout() {
+            console.log("Attempting to initiate checkout...");
             if (cart.length > 0) {
                 customerInfoModal.classList.remove('hidden');
                 customerNameInput.focus(); // Focus on the first input field
+                console.log("Customer info modal displayed.");
             } else {
                 showMessageBox("Your cart is empty. Please add items before checking out.");
+                console.warn("Checkout attempted with empty cart.");
             }
+        }
+
+        // Event listener for the checkout button
+        checkoutButton.addEventListener('click', initiateCheckout); // Direct call, cleaner
+
+        /**
+         * Calculates the total amount with discounts based on customer type.
+         * @param {number} subtotal - The sum of all item prices.
+         * @param {string} customerType - The type of customer ('Normal', 'Standard', 'VIP').
+         * @returns {number} The final total after discount.
+         */
+        function calculateDiscountedTotal(subtotal, customerType) {
+            let discountRate = 0;
+            if (customerType === 'Standard') {
+                discountRate = 0.15; // 15% discount for Standard
+            } else if (customerType === 'VIP') {
+                discountRate = 0.25; // 25% discount for VIP
+            }
+            const discountedTotal = subtotal * (1 - discountRate);
+            console.log(`Subtotal: ${subtotal}, Customer Type: ${customerType}, Discount Rate: ${discountRate*100}%, Final Total: ${discountedTotal}`);
+            return discountedTotal;
         }
 
         /**
@@ -568,11 +655,14 @@
          * Decrements stock for purchased items, saves transaction, and generates invoice.
          */
         submitCustomerInfoButton.addEventListener('click', () => {
+            console.log("Submit customer info button clicked. Completing purchase...");
             const customerName = customerNameInput.value.trim();
-            const customerPhone = customerPhoneInput.value.trim(); // Changed from email
-            const customerType = customerTypeSelect.value; // Get selected customer type
+            const customerPhone = customerPhoneInput.value.trim();
+            const customerType = customerTypeSelect.value;
             const transactionTimestamp = Date.now();
-            const transactionTotal = parseFloat(cartTotalSpan.textContent.replace('$', ''));
+
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const transactionTotal = calculateDiscountedTotal(subtotal, customerType);
 
             // Store transaction
             const transaction = {
@@ -580,156 +670,231 @@
                 timestamp: transactionTimestamp,
                 customer: {
                     name: customerName || 'Anonymous',
-                    phone: customerPhone || 'N/A', // Changed from email
-                    type: customerType // Added customer type
+                    phone: customerPhone || 'N/A',
+                    type: customerType
                 },
                 items: JSON.parse(JSON.stringify(cart)), // Deep copy of cart items
+                subtotal: subtotal,
+                discountApplied: subtotal - transactionTotal,
                 total: transactionTotal
             };
             salesHistory.push(transaction);
+            console.log("Transaction recorded:", transaction);
 
             // Decrement stock for each item in the cart
             cart.forEach(cartItem => {
                 const productInStock = products.find(p => p.id === cartItem.id);
                 if (productInStock) {
                     productInStock.stock -= cartItem.quantity;
+                    console.log(`Stock for ${productInStock.name} reduced by ${cartItem.quantity}. New stock: ${productInStock.stock}`);
                 }
             });
 
-            // Clear customer info fields and hide modal
+            // Generate and display invoice
+            displayInvoice(transaction);
+
+            // Clear cart, update displays, and hide modal
+            cart = [];
+            updateCartDisplay();
+            renderProducts(); // Update product display to reflect new stock
+            renderStockManagement(); // Update stock management view
+            renderSalesHistoryAndReport(); // Update sales history view
+            customerInfoModal.classList.add('hidden');
             customerNameInput.value = '';
             customerPhoneInput.value = '';
-            customerTypeSelect.value = 'Normal'; // Reset to default
-            customerInfoModal.classList.add('hidden');
-
-            showMessageBox(`Purchase successful! Your total is ${formatCurrency(transactionTotal)}. Thank you!`);
-
-            renderInvoice(transaction); // Display the invoice
-            cart = []; // Clear the cart after checkout
-            updateCartDisplay(); // Update cart display and total
-            renderProducts(); // Re-render products to show updated stock levels
-            renderSalesHistoryAndReport(); // Update history and report
+            customerTypeSelect.value = 'Normal';
+            showMessageBox("Purchase completed successfully!");
+            console.log("Purchase successfully completed!");
         });
 
 
         /**
-         * Renders the invoice details in a modal.
+         * Displays the invoice in a modal.
          * @param {object} transaction - The transaction object to display.
          */
-        function renderInvoice(transaction) {
-            let invoiceHtml = `
-                <div class="text-center mb-6">
-                    <p class="text-xl font-bold text-gray-800">My Mini Mart</p>
-                    <p class="text-sm text-gray-600">Your one-stop shop for essentials!</p>
-                    <p class="text-sm text-gray-600">Date: ${new Date(transaction.timestamp).toLocaleString()}</p>
-                    <p class="text-sm text-gray-600">Invoice ID: #${transaction.id}</p>
-                </div>
-                <div class="mb-6">
-                    <p class="font-semibold text-gray-700">Customer Details:</p>
-                    <p class="text-gray-600 ml-4">Type: ${transaction.customer.type}</p>
-                    <p class="text-gray-600 ml-4">Name: ${transaction.customer.name}</p>
-                    <p class="text-gray-600 ml-4">Phone: ${transaction.customer.phone}</p>
-                </div>
-                <div class="mb-6">
-                    <p class="font-semibold text-gray-700">Items Purchased:</p>
-                    <table class="min-w-full bg-white border border-gray-300 rounded-md overflow-hidden mt-2">
+        function displayInvoice(transaction) {
+            const invoiceItemsHTML = transaction.items.map((item, index) => `
+                <tr>
+                    <td class="border px-4 py-2">${index + 1}</td>
+                    <td class="border px-4 py-2">${item.name}</td>
+                    <td class="border px-4 py-2">${item.quantity}</td>
+                    <td class="border px-4 py-2">${formatCurrency(item.price)}</td>
+                    <td class="border px-4 py-2">${formatCurrency(item.price * item.quantity)}</td>
+                </tr>
+            `).join('');
+
+            const invoiceHTML = `
+                <div class="pdf-content">
+                    <h2 class="text-xl font-bold text-gray-800 mb-2 text-center">Receipt</h2>
+                    <p class="text-sm text-gray-600 text-center mb-4">Transaction ID: #${transaction.id}</p>
+                    <p class="text-sm text-gray-600 text-center mb-4">Date: ${new Date(transaction.timestamp).toLocaleString()}</p>
+                    
+                    <div class="mb-4">
+                        <p class="text-md font-semibold text-gray-700">Customer Details:</p>
+                        <p class="text-sm text-gray-600">Name: ${transaction.customer.name}</p>
+                        <p class="text-sm text-gray-600">Phone: ${transaction.customer.phone}</p>
+                        <p class="text-sm text-gray-600">Type: ${transaction.customer.type}</p>
+                    </div>
+
+                    <table class="w-full text-left table-auto">
                         <thead>
                             <tr class="bg-gray-100">
-                                <th class="py-2 px-4 border-b text-left text-gray-700">Product</th>
-                                <th class="py-2 px-4 border-b text-center text-gray-700">Qty</th>
-                                <th class="py-2 px-4 border-b text-right text-gray-700">Price</th>
-                                <th class="py-2 px-4 border-b text-right text-gray-700">Total</th>
+                                <th class="px-4 py-2 text-gray-700">No.</th>
+                                <th class="px-4 py-2 text-gray-700">Item</th>
+                                <th class="px-4 py-2 text-gray-700">Qty</th>
+                                <th class="px-4 py-2 text-gray-700">Price</th>
+                                <th class="px-4 py-2 text-gray-700">Total</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${transaction.items.map(item => `
-                                <tr>
-                                    <td class="py-2 px-4 border-b text-gray-800">${item.name}</td>
-                                    <td class="py-2 px-4 border-b text-center text-gray-800">${item.quantity}</td>
-                                    <td class="py-2 px-4 border-b text-right text-gray-800">${formatCurrency(item.price)}</td>
-                                    <td class="py-2 px-4 border-b text-right text-gray-800">${formatCurrency(item.price * item.quantity)}</td>
-                                </tr>
-                            `).join('')}
+                            ${invoiceItemsHTML}
                         </tbody>
                     </table>
-                </div>
-                <div class="text-right border-t-2 pt-4">
-                    <p class="text-xl font-bold text-gray-800">Grand Total: <span class="text-blue-600">${formatCurrency(transaction.total)}</span></p>
+
+                    <div class="text-right mt-6">
+                        <p class="text-md text-gray-700">Subtotal: ${formatCurrency(transaction.subtotal)}</p>
+                        <p class="text-md text-gray-700">Discount: ${formatCurrency(transaction.discountApplied)} (${(transaction.discountApplied / transaction.subtotal * 100).toFixed(0)}%)</p>
+                        <p class="text-lg font-bold text-gray-800">Grand Total: ${formatCurrency(transaction.total)}</p>
+                    </div>
+
+                    <p class="text-center text-xs text-gray-500 mt-8">Thank you for your purchase!</p>
                 </div>
             `;
-            invoiceContent.innerHTML = invoiceHtml;
+            invoiceContent.innerHTML = invoiceHTML;
             invoiceModal.classList.remove('hidden');
+            console.log("Invoice displayed.");
         }
 
         /**
-         * Restocks all products to their initial quantities.
+         * Resets all product stock to their initial values.
          */
-        function restockAllProducts() {
+        restockButton.addEventListener('click', () => {
             products.forEach(product => {
                 const initialStock = initialProductStock.find(p => p.id === product.id);
                 if (initialStock) {
                     product.stock = initialStock.stock;
                 }
             });
-            renderProducts(); // Re-render products to show updated stock levels
-            if (document.getElementById('stock-page').classList.contains('hidden')) {
-                // If on stock page, re-render it too
-            } else {
-                renderStockManagement();
-            }
-            showMessageBox("All products have been restocked!");
-        }
+            renderProducts();
+            renderStockManagement();
+            showMessageBox("All products have been restocked to their initial quantities!");
+            console.log("All products restocked.");
+        });
 
         /**
-         * Generates and downloads a PDF of the sales report.
+         * Generates and prints a daily sales report as a PDF.
          */
-        function printSalesReport() {
-            const element = document.getElementById('history-page'); // Target the entire sales history page
+        printReportButton.addEventListener('click', () => {
+            console.log("Generating daily report PDF...");
+            const reportDate = reportDateSpan.textContent;
+            const dailySales = dailyTotalSalesSpan.textContent;
+            const dailyItems = dailyTotalItemsSpan.textContent;
+            const dailyTransactions = dailyTotalTransactionsSpan.textContent;
 
-            // Create a temporary clone of the element to adjust styles for PDF generation
-            const clonedElement = element.cloneNode(true);
-            clonedElement.classList.remove('hidden'); // Ensure it's visible for rendering
-            clonedElement.style.width = '210mm'; // A4 width for consistency
-            clonedElement.style.padding = '20mm'; // Add some padding
+            let salesHistoryHTML = '<p>No sales recorded for today.</p>';
 
-            // Optional: Remove buttons or interactive elements from the cloned content if desired
-            clonedElement.querySelectorAll('button').forEach(btn => btn.remove());
-            clonedElement.querySelectorAll('nav').forEach(nav => nav.remove());
-            clonedElement.querySelector('aside').remove(); // Remove the shopping cart from the PDF
+            // Filter sales for today
+            const today = new Date().toLocaleDateString('en-US');
+            const dailySalesRecords = salesHistory.filter(sale => new Date(sale.timestamp).toLocaleDateString('en-US') === today);
 
-            // Apply a class for PDF-specific styling
-            clonedElement.classList.add('pdf-content');
+            if (dailySalesRecords.length > 0) {
+                salesHistoryHTML = `
+                    <h4 class="text-lg font-semibold text-gray-800 mt-6 mb-3">Daily Transactions:</h4>
+                    <table class="w-full text-left border border-gray-300">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="px-4 py-2 border">Time</th>
+                                <th class="px-4 py-2 border">Customer</th>
+                                <th class="px-4 py-2 border">Items</th>
+                                <th class="px-4 py-2 border">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${dailySalesRecords.map(sale => `
+                                <tr>
+                                    <td class="border px-4 py-2">${new Date(sale.timestamp).toLocaleTimeString()}</td>
+                                    <td class="border px-4 py-2">${sale.customer.name} (${sale.customer.type})</td>
+                                    <td class="border px-4 py-2">
+                                        <ul class="list-disc pl-5">
+                                            ${sale.items.map(item => `<li>${item.name} (x${item.quantity})</li>`).join('')}
+                                        </ul>
+                                    </td>
+                                    <td class="border px-4 py-2">${formatCurrency(sale.total)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
 
-            // Append to body temporarily for html2pdf to render
-            document.body.appendChild(clonedElement);
 
-            html2pdf(clonedElement, {
-                margin: 10,
-                filename: `Sales_Report_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`,
+            const reportContent = `
+                <div class="pdf-content">
+                    <h1 class="text-3xl font-bold text-center mb-6">Daily Sales Report</h1>
+                    <p class="text-xl text-center text-gray-700 mb-6">Date: ${reportDate}</p>
+
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-8">
+                        <p class="text-lg text-gray-700"><strong>Summary for ${reportDate}:</strong></p>
+                        <p class="text-lg text-gray-700">Total Sales: <span class="font-bold text-blue-700">${dailySales}</span></p>
+                        <p class="text-lg text-gray-700">Items Sold: <span class="font-bold text-blue-700">${dailyItems}</span></p>
+                        <p class="text-lg text-gray-700">Number of Transactions: <span class="font-bold text-blue-700">${dailyTransactions}</span></p>
+                    </div>
+                    ${salesHistoryHTML}
+                </div>
+            `;
+
+            // Use html2pdf to generate the PDF
+            html2pdf().from(reportContent).set({
+                margin: 1,
+                filename: `Daily_Sales_Report_${reportDate.replace(/\//g, '-')}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, logging: true, dpi: 192, letterRendering: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).finally(() => {
-                // Remove the cloned element after PDF generation
-                document.body.removeChild(clonedElement);
-            });
-        }
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            }).save();
+            console.log("Daily report PDF generated.");
+        });
 
+        // Login/Logout functionality
+        loginButton.addEventListener('click', () => {
+            const username = usernameInput.value;
+            const password = passwordInput.value;
+            console.log(`Login attempt with: ${username} / ${password}`);
 
-        // Event listener for the main checkout button
-        checkoutButton.addEventListener('click', initiateCheckout);
+            if (username === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+                loginModal.classList.add('hidden');
+                mainHeader.classList.remove('hidden');
+                mainContent.classList.remove('hidden');
+                mainFooter.classList.remove('hidden');
+                showMessageBox("Login successful! Welcome, Admin.");
+                showPage('products'); // Show products page after successful login
+                console.log("Login successful.");
+            } else {
+                loginErrorMessage.classList.remove('hidden');
+                console.warn("Login failed: Invalid credentials.");
+            }
+        });
 
-        // Event listener for the restock button
-        restockButton.addEventListener('click', restockAllProducts);
-
-        // Event listener for the print report button
-        printReportButton.addEventListener('click', printSalesReport);
-
+        logoutButton.addEventListener('click', () => {
+            console.log("Logging out...");
+            mainHeader.classList.add('hidden');
+            mainContent.classList.add('hidden');
+            mainFooter.classList.add('hidden');
+            loginModal.classList.remove('hidden');
+            usernameInput.value = ADMIN_EMAIL; // Reset to default for convenience
+            passwordInput.value = ADMIN_PASSWORD; // Reset to default
+            loginErrorMessage.classList.add('hidden'); // Hide error message
+            showMessageBox("You have been logged out.");
+            console.log("Logout successful.");
+        });
 
         // Initial rendering when the page loads
         document.addEventListener('DOMContentLoaded', () => {
-            showPage('products'); // Start on the products page
-            updateCartDisplay(); // Ensure initial cart state is correct
+            // Ensure login modal is shown first
+            loginModal.classList.remove('hidden');
+            usernameInput.focus();
+            updateCartDisplay(); // Initialize cart display and button state
+            renderSalesHistoryAndReport(); // Initialize daily report date
+            console.log("Application initialized. Login modal displayed.");
         });
     </script>
 </body>
